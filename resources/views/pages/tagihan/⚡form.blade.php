@@ -195,7 +195,7 @@ new #[Title('Tagihan')] class extends Component {
             $this->tagihan->perbarui($isi);
             $tagihan = $this->tagihan;
         } else {
-            $tagihan = Tagihan::catat($this->grup, $isi);
+            $tagihan = Tagihan::catat($this->grup, $isi, Auth::user());
         }
 
         $this->redirectRoute('tagihan.show', ['grup' => $this->grup, 'tagihan' => $tagihan], navigate: true);

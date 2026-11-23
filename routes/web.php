@@ -11,6 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('grup', 'pages::grup.index')->name('grup.index');
     Route::livewire('grup/{grup}', 'pages::grup.show')->name('grup.show');
     Route::livewire('gabung/{kode}', 'pages::grup.gabung')->name('grup.gabung');
+    Route::livewire('notifikasi', 'pages::notifikasi.index')->name('notifikasi.index');
 
     Route::livewire('grup/{grup}/tagihan/buat', 'pages::tagihan.form')->name('tagihan.create');
     Route::livewire('grup/{grup}/tagihan/{tagihan}', 'pages::tagihan.show')->name('tagihan.show');

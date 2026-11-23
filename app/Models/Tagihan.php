@@ -5,6 +5,10 @@ namespace App\Models;
 use App\Actions\Urunan\BagiRupiah;
 use App\Enums\CaraBagi;
 use App\Enums\StatusPembayaran;
+use App\Notifications\BuktiBayarDitolak;
+use App\Notifications\BuktiBayarMasuk;
+use App\Notifications\PembayaranDikonfirmasi;
+use App\Notifications\TagihanBaru;
 use Database\Factories\TagihanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -95,14 +99,42 @@ class Tagihan extends Model
      *
      * @param  array{judul: string, tanggal: string, dibayar_oleh: int, cara_bagi: CaraBagi, total: int, peserta: list<int>, item: list<array{nama: string, harga: int, penanggung: list<int>}>}  $data
      */
-    public static function catat(Grup $grup, array $data): self
+    public static function catat(Grup $grup, array $data, ?User $oleh = null): self
     {
-        return DB::transaction(function () use ($grup, $data): self {
+        $tagihan = DB::transaction(function () use ($grup, $data): self {
             $tagihan = $grup->tagihan()->make();
             $tagihan->isiDari($data);
 
             return $tagihan;
         });
+
+        if ($oleh !== null) {
+            $tagihan->kabariPenanggung($oleh);
+        }
+
+        return $tagihan;
+    }
+
+    /**
+     * Kabari anggota yang punya akun bahwa ada tagihan baru yang harus mereka bayar.
+     *
+     * Pembayar dan orang yang mencatat tidak dikabari.
+     */
+    public function kabariPenanggung(User $oleh): void
+    {
+        $this->bagian()->with('anggota.user')->get()
+            ->filter(fn (BagianTagihan $bagian): bool => $bagian->anggota_grup_id !== $this->dibayar_oleh
+                && $bagian->anggota->user !== null
+                && $bagian->anggota->user_id !== $oleh->id)
+            ->each(fn (BagianTagihan $bagian) => $bagian->anggota->user->notify(new TagihanBaru($this, $bagian->jumlah)));
+    }
+
+    /**
+     * User yang mengelola tagihan ini: pembayar, atau pembuat grup kalau pembayar tidak punya akun.
+     */
+    public function pengelola(): ?User
+    {
+        return $this->pembayar->user ?? $this->grup->pembuat;
     }
 
     /**
@@ -249,7 +281,7 @@ class Tagihan extends Model
             return $this->konfirmasi($status['menunggu']);
         }
 
-        return $this->pembayaran()->create([
+        $pembayaran = $this->pembayaran()->create([
             'grup_id' => $this->grup_id,
             'dari_anggota_id' => $anggota->id,
             'ke_anggota_id' => $this->dibayar_oleh,
@@ -259,6 +291,10 @@ class Tagihan extends Model
             'dibayar_pada' => now(),
             'dikonfirmasi_pada' => now(),
         ]);
+
+        $anggota->user?->notify(new PembayaranDikonfirmasi($this, $pembayaran->jumlah));
+
+        return $pembayaran;
     }
 
     /**
@@ -274,7 +310,7 @@ class Tagihan extends Model
             return null;
         }
 
-        return $this->pembayaran()->create([
+        $pembayaran = $this->pembayaran()->create([
             'grup_id' => $this->grup_id,
             'dari_anggota_id' => $anggota->id,
             'ke_anggota_id' => $this->dibayar_oleh,
@@ -284,6 +320,14 @@ class Tagihan extends Model
             'dicatat_oleh' => $oleh->id,
             'dibayar_pada' => now(),
         ]);
+
+        $pengelola = $this->pengelola();
+
+        if ($pengelola !== null && $pengelola->id !== $oleh->id) {
+            $pengelola->notify(new BuktiBayarMasuk($this, $pembayaran->jumlah, $anggota->nama));
+        }
+
+        return $pembayaran;
     }
 
     /**
@@ -296,6 +340,8 @@ class Tagihan extends Model
                 'status' => StatusPembayaran::Diterima,
                 'dikonfirmasi_pada' => now(),
             ]);
+
+            $pembayaran->dari->user?->notify(new PembayaranDikonfirmasi($this, $pembayaran->jumlah));
         }
 
         return $pembayaran;
@@ -307,7 +353,12 @@ class Tagihan extends Model
     public function tolak(Pembayaran $pembayaran): void
     {
         if ($pembayaran->status === StatusPembayaran::Menunggu) {
+            $pengirim = $pembayaran->dari->user;
+            $jumlah = $pembayaran->jumlah;
+
             $pembayaran->hapusDenganBukti();
+
+            $pengirim?->notify(new BuktiBayarDitolak($this, $jumlah));
         }
     }
 

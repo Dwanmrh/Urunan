@@ -4,6 +4,8 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
+        @php($jumlahNotifikasiBaru = auth()->user()->unreadNotifications()->count())
+
         <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
@@ -17,6 +19,16 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="user-group" :href="route('grup.index')" :current="request()->routeIs('grup.*')" wire:navigate>
                         Grup patungan
+                    </flux:sidebar.item>
+                    <flux:sidebar.item
+                        icon="bell"
+                        :href="route('notifikasi.index')"
+                        :current="request()->routeIs('notifikasi.*')"
+                        :badge="$jumlahNotifikasiBaru ?: null"
+                        badge:color="sky"
+                        wire:navigate
+                    >
+                        Notifikasi
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
@@ -41,6 +53,13 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <a href="{{ route('notifikasi.index') }}" wire:navigate class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="Notifikasi{{ $jumlahNotifikasiBaru ? ', '.$jumlahNotifikasiBaru.' belum dibaca' : '' }}">
+                <flux:icon.bell class="size-5" />
+                @if ($jumlahNotifikasiBaru)
+                    <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-semibold text-white">{{ $jumlahNotifikasiBaru > 9 ? '9+' : $jumlahNotifikasiBaru }}</span>
+                @endif
+            </a>
 
             <flux:dropdown position="top" align="end">
                 <flux:profile
