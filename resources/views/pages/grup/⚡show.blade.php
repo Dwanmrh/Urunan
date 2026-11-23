@@ -163,19 +163,24 @@ new #[Title('Detail grup')] class extends Component {
             </flux:card>
 
             <flux:card class="space-y-4">
-                <flux:heading size="lg" level="2">Tagihan</flux:heading>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <flux:heading size="lg" level="2">Tagihan</flux:heading>
+                    <flux:button :href="route('tagihan.create', $grup)" variant="primary" size="sm" icon="plus" wire:navigate data-test="tambah-tagihan">Tambah tagihan</flux:button>
+                </div>
 
                 @if ($this->daftarTagihan->isEmpty())
                     <flux:text>Belum ada tagihan di grup ini.</flux:text>
                 @else
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->daftarTagihan as $tagihan)
-                            <li wire:key="tagihan-{{ $tagihan->id }}" class="flex items-center justify-between gap-3 py-3">
-                                <div>
-                                    <flux:heading>{{ $tagihan->judul }}</flux:heading>
-                                    <flux:text>Dibayar dulu oleh {{ $tagihan->pembayar->nama }}, {{ $tagihan->tanggal->format('d/m/Y') }}</flux:text>
-                                </div>
-                                <x-rupiah :jumlah="$tagihan->total" class="font-semibold" />
+                            <li wire:key="tagihan-{{ $tagihan->id }}">
+                                <a href="{{ route('tagihan.show', [$grup, $tagihan]) }}" wire:navigate class="flex items-center justify-between gap-3 py-3 hover:opacity-80">
+                                    <div>
+                                        <flux:heading>{{ $tagihan->judul }}</flux:heading>
+                                        <flux:text>Dibayar dulu oleh {{ $tagihan->pembayar->nama }}, {{ $tagihan->tanggal->format('d/m/Y') }}</flux:text>
+                                    </div>
+                                    <x-rupiah :jumlah="$tagihan->total" class="font-semibold" />
+                                </a>
                             </li>
                         @endforeach
                     </ul>

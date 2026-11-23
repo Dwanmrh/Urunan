@@ -33,4 +33,31 @@ class BagiRupiah
 
         return $bagian;
     }
+
+    /**
+     * Jumlahkan bagian tiap anggota dari beberapa item.
+     *
+     * Item tanpa penanggung dibagi rata ke semua anggota yang diberikan.
+     *
+     * @param  list<array{harga: int, penanggung: list<int>}>  $item
+     * @param  list<int>  $idSemua  Anggota yang menanggung item tanpa penanggung.
+     * @return array<int, int> Bagian tiap anggota, dengan id anggota sebagai kunci.
+     */
+    public static function perItem(array $item, array $idSemua): array
+    {
+        $bagian = [];
+
+        foreach ($item as $baris) {
+            $penanggung = $baris['penanggung'] !== [] ? $baris['penanggung'] : $idSemua;
+            sort($penanggung);
+
+            foreach (self::rata($baris['harga'], $penanggung) as $id => $jumlah) {
+                $bagian[$id] = ($bagian[$id] ?? 0) + $jumlah;
+            }
+        }
+
+        ksort($bagian);
+
+        return $bagian;
+    }
 }

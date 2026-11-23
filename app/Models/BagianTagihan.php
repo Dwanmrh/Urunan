@@ -28,6 +28,8 @@ class BagianTagihan extends Model
     protected function casts(): array
     {
         return [
+            'tagihan_id' => 'integer',
+            'anggota_grup_id' => 'integer',
             'jumlah' => 'integer',
         ];
     }

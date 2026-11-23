@@ -14,6 +14,15 @@ test('sisa pembagian diberikan ke anggota urutan pertama sehingga jumlahnya teta
     expect(array_sum($bagian))->toBe(100000);
 });
 
+test('bagi per item hanya membebani penanggung dan item tanpa penanggung dibagi ke semua', function () {
+    $bagian = BagiRupiah::perItem([
+        ['harga' => 60000, 'penanggung' => [2]],
+        ['harga' => 30000, 'penanggung' => []],
+    ], [1, 2]);
+
+    expect($bagian)->toBe([1 => 15000, 2 => 75000]);
+});
+
 test('tanpa anggota tidak ada bagian', function () {
     expect(BagiRupiah::rata(100000, []))->toBe([]);
 });
