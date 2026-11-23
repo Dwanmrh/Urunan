@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Actions\Urunan\BagiRupiah;
 use App\Enums\CaraBagi;
+use App\Enums\StatusPembayaran;
 use Database\Factories\TagihanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -97,31 +98,58 @@ class Tagihan extends Model
     public static function catat(Grup $grup, array $data): self
     {
         return DB::transaction(function () use ($grup, $data): self {
-            $perItem = $data['cara_bagi'] === CaraBagi::PerItem;
-
-            $tagihan = $grup->tagihan()->create([
-                'judul' => $data['judul'],
-                'tanggal' => $data['tanggal'],
-                'dibayar_oleh' => $data['dibayar_oleh'],
-                'cara_bagi' => $data['cara_bagi'],
-                'total' => $perItem ? array_sum(array_column($data['item'], 'harga')) : $data['total'],
-            ]);
-
-            if ($perItem) {
-                foreach ($data['item'] as $baris) {
-                    $item = $tagihan->item()->create([
-                        'nama' => $baris['nama'],
-                        'harga' => $baris['harga'],
-                    ]);
-
-                    $item->anggota()->attach($baris['penanggung']);
-                }
-            }
-
-            $tagihan->simpanBagian($perItem ? null : $data['peserta']);
+            $tagihan = $grup->tagihan()->make();
+            $tagihan->isiDari($data);
 
             return $tagihan;
         });
+    }
+
+    /**
+     * Ubah isi tagihan lalu hitung ulang bagian tiap anggota.
+     *
+     * Bukti bayar yang masih menunggu konfirmasi dibatalkan karena nominalnya bisa berubah.
+     * Pembayaran yang sudah diterima tetap tercatat.
+     *
+     * @param  array{judul: string, tanggal: string, dibayar_oleh: int, cara_bagi: CaraBagi, total: int, peserta: list<int>, item: list<array{nama: string, harga: int, penanggung: list<int>}>}  $data
+     */
+    public function perbarui(array $data): void
+    {
+        DB::transaction(function () use ($data): void {
+            $this->batalkanPembayaranMenunggu();
+            $this->item()->delete();
+            $this->isiDari($data);
+        });
+    }
+
+    /**
+     * Hapus tagihan beserta bukti yang masih menunggu konfirmasi.
+     *
+     * Pembayaran yang sudah diterima tetap tercatat di grup supaya saldo tetap benar.
+     */
+    public function hapus(): void
+    {
+        DB::transaction(function (): void {
+            $this->batalkanPembayaranMenunggu();
+            $this->delete();
+        });
+    }
+
+    /**
+     * Apakah user boleh mengubah, menghapus, dan mengonfirmasi pembayaran tagihan ini.
+     *
+     * Yang berhak adalah pembayar tagihan. Kalau pembayar tidak punya akun,
+     * hak ini dipegang pembuat grup.
+     */
+    public function bisaDikelolaOleh(User $user): bool
+    {
+        $idUserPembayar = $this->pembayar->user_id;
+
+        if ($idUserPembayar !== null) {
+            return $idUserPembayar === $user->id;
+        }
+
+        return $this->grup->dibuat_oleh === $user->id;
     }
 
     /**
@@ -171,42 +199,78 @@ class Tagihan extends Model
     /**
      * Status pelunasan tiap anggota yang menanggung tagihan ini.
      *
-     * @return Collection<int, array{anggota: AnggotaGrup, bagian: int, dibayar: int, sisa: int, pembayar: bool}>
+     * @return Collection<int, array{anggota: AnggotaGrup, bagian: int, dibayar: int, sisa: int, pembayar: bool, menunggu: Pembayaran|null}>
      */
     public function statusPelunasan(): Collection
     {
-        $dibayar = $this->pembayaran()
-            ->where('ke_anggota_id', $this->dibayar_oleh)
-            ->selectRaw('dari_anggota_id, SUM(jumlah) as jumlah')
+        $pembayaran = $this->pembayaran()->where('ke_anggota_id', $this->dibayar_oleh)->get();
+
+        $diterima = $pembayaran
+            ->filter(fn (Pembayaran $pembayaran): bool => $pembayaran->status === StatusPembayaran::Diterima)
             ->groupBy('dari_anggota_id')
-            ->pluck('jumlah', 'dari_anggota_id');
+            ->map(fn (Collection $daftar): int => $daftar->sum('jumlah'));
+
+        $menunggu = $pembayaran
+            ->filter(fn (Pembayaran $pembayaran): bool => $pembayaran->status === StatusPembayaran::Menunggu)
+            ->keyBy('dari_anggota_id');
 
         return $this->bagian()->with('anggota')->orderBy('anggota_grup_id')->get()
-            ->map(function (BagianTagihan $bagian) use ($dibayar): array {
+            ->map(function (BagianTagihan $bagian) use ($diterima, $menunggu): array {
                 $pembayar = $bagian->anggota_grup_id === $this->dibayar_oleh;
-                $sudahDibayar = $pembayar ? $bagian->jumlah : (int) ($dibayar[$bagian->anggota_grup_id] ?? 0);
+                $sudahDibayar = $pembayar ? $bagian->jumlah : (int) ($diterima[$bagian->anggota_grup_id] ?? 0);
+                $sisa = max(0, $bagian->jumlah - $sudahDibayar);
 
                 return [
                     'anggota' => $bagian->anggota,
                     'bagian' => $bagian->jumlah,
                     'dibayar' => $sudahDibayar,
-                    'sisa' => max(0, $bagian->jumlah - $sudahDibayar),
+                    'sisa' => $sisa,
                     'pembayar' => $pembayar,
+                    'menunggu' => $sisa > 0 ? $menunggu->get($bagian->anggota_grup_id) : null,
                 ];
             });
     }
 
     /**
-     * Catat bahwa anggota sudah melunasi sisa bagiannya ke pembayar tagihan.
+     * Catat bahwa anggota sudah melunasi sisa bagiannya, misalnya bayar tunai.
      *
+     * Kalau anggota sudah mengirim bukti, bukti itu yang dikonfirmasi.
      * Tidak mencatat apa pun kalau anggota adalah pembayar atau bagiannya sudah lunas.
      */
-    public function tandaiLunas(AnggotaGrup $anggota): ?Pembayaran
+    public function tandaiLunas(AnggotaGrup $anggota, User $oleh): ?Pembayaran
     {
-        $status = $this->statusPelunasan()
-            ->first(fn (array $baris): bool => $baris['anggota']->id === $anggota->id);
+        $status = $this->statusAnggota($anggota);
 
         if ($status === null || $status['pembayar'] || $status['sisa'] === 0) {
+            return null;
+        }
+
+        if ($status['menunggu'] !== null) {
+            return $this->konfirmasi($status['menunggu']);
+        }
+
+        return $this->pembayaran()->create([
+            'grup_id' => $this->grup_id,
+            'dari_anggota_id' => $anggota->id,
+            'ke_anggota_id' => $this->dibayar_oleh,
+            'jumlah' => $status['sisa'],
+            'status' => StatusPembayaran::Diterima,
+            'dicatat_oleh' => $oleh->id,
+            'dibayar_pada' => now(),
+            'dikonfirmasi_pada' => now(),
+        ]);
+    }
+
+    /**
+     * Simpan bukti transfer dari anggota sebagai pembayaran yang menunggu konfirmasi.
+     *
+     * Tidak mencatat apa pun kalau anggota adalah pembayar, sudah lunas, atau buktinya masih menunggu.
+     */
+    public function kirimBukti(AnggotaGrup $anggota, string $pathBukti, User $oleh): ?Pembayaran
+    {
+        $status = $this->statusAnggota($anggota);
+
+        if ($status === null || $status['pembayar'] || $status['sisa'] === 0 || $status['menunggu'] !== null) {
             return null;
         }
 
@@ -215,7 +279,87 @@ class Tagihan extends Model
             'dari_anggota_id' => $anggota->id,
             'ke_anggota_id' => $this->dibayar_oleh,
             'jumlah' => $status['sisa'],
+            'status' => StatusPembayaran::Menunggu,
+            'bukti_path' => $pathBukti,
+            'dicatat_oleh' => $oleh->id,
             'dibayar_pada' => now(),
         ]);
+    }
+
+    /**
+     * Terima bukti bayar yang menunggu konfirmasi.
+     */
+    public function konfirmasi(Pembayaran $pembayaran): Pembayaran
+    {
+        if ($pembayaran->status === StatusPembayaran::Menunggu) {
+            $pembayaran->update([
+                'status' => StatusPembayaran::Diterima,
+                'dikonfirmasi_pada' => now(),
+            ]);
+        }
+
+        return $pembayaran;
+    }
+
+    /**
+     * Tolak bukti bayar yang menunggu konfirmasi, lalu hapus filenya.
+     */
+    public function tolak(Pembayaran $pembayaran): void
+    {
+        if ($pembayaran->status === StatusPembayaran::Menunggu) {
+            $pembayaran->hapusDenganBukti();
+        }
+    }
+
+    /**
+     * @return array{anggota: AnggotaGrup, bagian: int, dibayar: int, sisa: int, pembayar: bool, menunggu: Pembayaran|null}|null
+     */
+    private function statusAnggota(AnggotaGrup $anggota): ?array
+    {
+        return $this->statusPelunasan()
+            ->first(fn (array $baris): bool => $baris['anggota']->id === $anggota->id);
+    }
+
+    /**
+     * Isi kolom, item, dan bagian tiap anggota dari data form.
+     *
+     * @param  array{judul: string, tanggal: string, dibayar_oleh: int, cara_bagi: CaraBagi, total: int, peserta: list<int>, item: list<array{nama: string, harga: int, penanggung: list<int>}>}  $data
+     */
+    private function isiDari(array $data): void
+    {
+        $perItem = $data['cara_bagi'] === CaraBagi::PerItem;
+
+        $this->fill([
+            'judul' => $data['judul'],
+            'tanggal' => $data['tanggal'],
+            'dibayar_oleh' => $data['dibayar_oleh'],
+            'cara_bagi' => $data['cara_bagi'],
+            'total' => $perItem ? array_sum(array_column($data['item'], 'harga')) : $data['total'],
+        ])->save();
+
+        if ($perItem) {
+            foreach ($data['item'] as $baris) {
+                $item = $this->item()->create([
+                    'nama' => $baris['nama'],
+                    'harga' => $baris['harga'],
+                ]);
+
+                $item->anggota()->attach($baris['penanggung']);
+            }
+        }
+
+        $this->unsetRelation('pembayar');
+        $this->simpanBagian($perItem ? null : $data['peserta']);
+    }
+
+    /**
+     * Hapus semua bukti bayar tagihan ini yang masih menunggu konfirmasi.
+     */
+    private function batalkanPembayaranMenunggu(): void
+    {
+        $this->pembayaran()
+            ->where('status', StatusPembayaran::Menunggu->value)
+            ->get()
+            ->each(fn (Pembayaran $pembayaran) => $pembayaran->hapusDenganBukti());
     }
 }

@@ -1,19 +1,24 @@
 <?php
 
 use App\Actions\Urunan\BagiRupiah;
+use App\Actions\Urunan\FormatRupiah;
 use App\Enums\CaraBagi;
 use App\Models\AnggotaGrup;
 use App\Models\Grup;
+use App\Models\ItemTagihan;
 use App\Models\Tagihan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Tambah tagihan')] class extends Component {
+new #[Title('Tagihan')] class extends Component {
     public Grup $grup;
+
+    public ?Tagihan $tagihan = null;
 
     public string $judul = '';
 
@@ -34,15 +39,25 @@ new #[Title('Tambah tagihan')] class extends Component {
     /**
      * Mount the component.
      */
-    public function mount(Grup $grup): void
+    public function mount(Grup $grup, ?Tagihan $tagihan = null): void
     {
         $this->grup = $grup;
 
-        $this->pastikanAnggota();
+        abort_unless($grup->punyaAnggota(Auth::user()), 403);
+
+        if ($tagihan?->exists) {
+            abort_unless($tagihan->grup_id === $grup->id, 404);
+            abort_unless($tagihan->bisaDikelolaOleh(Auth::user()), 403);
+
+            $this->tagihan = $tagihan;
+            $this->isiDariTagihan($tagihan);
+
+            return;
+        }
 
         $this->tanggal = now()->toDateString();
         $this->dibayarOleh = (string) $grup->anggota()->where('user_id', Auth::id())->value('id');
-        $this->peserta = $this->anggota->map(fn (AnggotaGrup $anggota): string => (string) $anggota->id)->all();
+        $this->peserta = $this->semuaIdAnggota();
         $this->tambahItem();
     }
 
@@ -66,7 +81,7 @@ new #[Title('Tambah tagihan')] class extends Component {
         if ($this->caraBagi === CaraBagi::PerItem->value) {
             $item = collect($this->item)
                 ->map(fn (array $baris): array => [
-                    'harga' => max(0, (int) $baris['harga']),
+                    'harga' => FormatRupiah::keAngka($baris['harga']),
                     'penanggung' => $this->idTerpilih($baris['penanggung']),
                 ])
                 ->filter(fn (array $baris): bool => $baris['harga'] > 0)
@@ -75,7 +90,7 @@ new #[Title('Tambah tagihan')] class extends Component {
 
             $bagian = BagiRupiah::perItem($item, $this->anggota->pluck('id')->all());
         } else {
-            $total = max(0, (int) $this->total);
+            $total = FormatRupiah::keAngka($this->total);
             $bagian = $total > 0 ? BagiRupiah::rata($total, $this->idTerpilih($this->peserta)) : [];
         }
 
@@ -110,14 +125,32 @@ new #[Title('Tambah tagihan')] class extends Component {
     }
 
     /**
-     * Simpan tagihan lalu buka halaman detailnya.
+     * Simpan tagihan baru atau perubahan, lalu buka halaman detailnya.
      */
     public function simpan(): void
     {
-        $this->pastikanAnggota();
+        abort_unless($this->grup->punyaAnggota(Auth::user()), 403);
+
+        if ($this->tagihan !== null) {
+            abort_unless($this->tagihan->bisaDikelolaOleh(Auth::user()), 403);
+        }
 
         $idAnggota = $this->anggota->pluck('id')->all();
         $perItem = $this->caraBagi === CaraBagi::PerItem->value;
+
+        $data = [
+            'judul' => $this->judul,
+            'tanggal' => $this->tanggal,
+            'dibayarOleh' => $this->dibayarOleh,
+            'caraBagi' => $this->caraBagi,
+            'total' => FormatRupiah::bersihkan($this->total),
+            'peserta' => $this->peserta,
+            'item' => array_map(fn (array $baris): array => [
+                'nama' => $baris['nama'],
+                'harga' => FormatRupiah::bersihkan($baris['harga']),
+                'penanggung' => $baris['penanggung'],
+            ], $this->item),
+        ];
 
         $aturan = [
             'judul' => ['required', 'string', 'max:100'],
@@ -142,23 +175,66 @@ new #[Title('Tambah tagihan')] class extends Component {
             ];
         }
 
-        $this->validate($aturan, $this->pesanValidasi());
+        Validator::make($data, $aturan, $this->pesanValidasi())->validate();
 
-        $tagihan = Tagihan::catat($this->grup, [
+        $isi = [
             'judul' => $this->judul,
             'tanggal' => $this->tanggal,
             'dibayar_oleh' => (int) $this->dibayarOleh,
             'cara_bagi' => CaraBagi::from($this->caraBagi),
-            'total' => (int) $this->total,
+            'total' => (int) $data['total'],
             'peserta' => $this->idTerpilih($this->peserta),
-            'item' => array_map(fn (array $baris): array => [
+            'item' => $perItem ? array_map(fn (array $baris): array => [
                 'nama' => $baris['nama'],
                 'harga' => (int) $baris['harga'],
                 'penanggung' => $this->idTerpilih($baris['penanggung']),
-            ], $perItem ? $this->item : []),
-        ]);
+            ], $data['item']) : [],
+        ];
+
+        if ($this->tagihan !== null) {
+            $this->tagihan->perbarui($isi);
+            $tagihan = $this->tagihan;
+        } else {
+            $tagihan = Tagihan::catat($this->grup, $isi);
+        }
 
         $this->redirectRoute('tagihan.show', ['grup' => $this->grup, 'tagihan' => $tagihan], navigate: true);
+    }
+
+    /**
+     * Isi form dari tagihan yang akan diedit.
+     */
+    private function isiDariTagihan(Tagihan $tagihan): void
+    {
+        $this->judul = $tagihan->judul;
+        $this->tanggal = $tagihan->tanggal->toDateString();
+        $this->dibayarOleh = (string) $tagihan->dibayar_oleh;
+        $this->caraBagi = $tagihan->cara_bagi->value;
+        $this->total = FormatRupiah::keTeks($tagihan->total);
+
+        if ($tagihan->cara_bagi === CaraBagi::PerItem) {
+            $this->peserta = $this->semuaIdAnggota();
+            $this->item = $tagihan->item()->with('anggota')->orderBy('id')->get()
+                ->map(fn (ItemTagihan $item): array => [
+                    'nama' => $item->nama,
+                    'harga' => FormatRupiah::keTeks($item->harga),
+                    'penanggung' => $item->anggota->map(fn (AnggotaGrup $anggota): string => (string) $anggota->id)->values()->all(),
+                ])
+                ->all();
+        } else {
+            $this->peserta = $tagihan->bagian()->orderBy('anggota_grup_id')->pluck('anggota_grup_id')
+                ->map(fn (int $id): string => (string) $id)
+                ->all();
+            $this->tambahItem();
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function semuaIdAnggota(): array
+    {
+        return $this->anggota->map(fn (AnggotaGrup $anggota): string => (string) $anggota->id)->values()->all();
     }
 
     /**
@@ -196,7 +272,7 @@ new #[Title('Tambah tagihan')] class extends Component {
             'caraBagi.required' => 'Pilih cara membagi.',
             'caraBagi.enum' => 'Cara membagi tidak valid.',
             'total.required' => 'Total tagihan wajib diisi.',
-            'total.integer' => 'Total harus angka bulat, tanpa titik atau koma.',
+            'total.integer' => 'Total harus berupa angka.',
             'total.min' => 'Total minimal Rp 1.',
             'total.max' => 'Total terlalu besar.',
             'peserta.required' => 'Pilih minimal satu orang yang ikut menanggung.',
@@ -207,27 +283,25 @@ new #[Title('Tambah tagihan')] class extends Component {
             'item.*.nama.required' => 'Nama item wajib diisi.',
             'item.*.nama.max' => 'Nama item maksimal 100 karakter.',
             'item.*.harga.required' => 'Harga wajib diisi.',
-            'item.*.harga.integer' => 'Harga harus angka bulat, tanpa titik atau koma.',
+            'item.*.harga.integer' => 'Harga harus berupa angka.',
             'item.*.harga.min' => 'Harga minimal Rp 1.',
             'item.*.harga.max' => 'Harga terlalu besar.',
             'item.*.penanggung.*.in' => 'Ada penanggung yang bukan anggota grup ini.',
         ];
     }
-
-    /**
-     * Tolak akses kalau user bukan anggota grup ini.
-     */
-    private function pastikanAnggota(): void
-    {
-        abort_unless($this->grup->punyaAnggota(Auth::user()), 403);
-    }
 }; ?>
 
 <section class="w-full max-w-2xl">
     <div class="mb-6">
-        <flux:button :href="route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">{{ $grup->nama }}</flux:button>
-        <flux:heading size="xl" level="1">Tambah tagihan</flux:heading>
+        <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">
+            {{ $tagihan ? $tagihan->judul : $grup->nama }}
+        </flux:button>
+        <flux:heading size="xl" level="1">{{ $tagihan ? 'Edit tagihan' : 'Tambah tagihan' }}</flux:heading>
     </div>
+
+    @if ($tagihan)
+        <flux:callout icon="information-circle" class="mb-6" text="Pembayaran yang sudah diterima tetap tercatat. Bukti bayar yang masih menunggu konfirmasi akan dibatalkan dan perlu dikirim ulang." />
+    @endif
 
     <form wire:submit="simpan" class="space-y-6">
         <flux:input wire:model="judul" label="Judul" type="text" placeholder="Contoh: Makan malam ultah Sinta" required />
@@ -254,7 +328,18 @@ new #[Title('Tambah tagihan')] class extends Component {
                     <flux:card wire:key="item-{{ $urutan }}" class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-[1fr_12rem]">
                             <flux:input wire:model="item.{{ $urutan }}.nama" label="Nama item" type="text" placeholder="Contoh: Ayam bakar" />
-                            <flux:input wire:model.live.debounce.400ms="item.{{ $urutan }}.harga" label="Harga (Rp)" type="number" inputmode="numeric" min="1" />
+                            <flux:input
+                                wire:model.live.debounce.400ms="item.{{ $urutan }}.harga"
+                                label="Harga"
+                                type="text"
+                                inputmode="numeric"
+                                mask:dynamic="$money($input, ',', '.', 0)"
+                                placeholder="60.000"
+                            >
+                                <x-slot name="iconLeading">
+                                    <span class="text-sm text-zinc-500">Rp</span>
+                                </x-slot>
+                            </flux:input>
                         </div>
 
                         <flux:checkbox.group wire:model.live="item.{{ $urutan }}.penanggung" label="Ditanggung oleh" description="Kosongkan kalau ditanggung semua anggota." variant="pills">
@@ -272,7 +357,18 @@ new #[Title('Tambah tagihan')] class extends Component {
                 <flux:button wire:click="tambahItem" icon="plus" class="w-full">Tambah item</flux:button>
             </div>
         @else
-            <flux:input wire:model.live.debounce.400ms="total" label="Total tagihan (Rp)" type="number" inputmode="numeric" min="1" placeholder="Contoh: 200000" />
+            <flux:input
+                wire:model.live.debounce.400ms="total"
+                label="Total tagihan"
+                type="text"
+                inputmode="numeric"
+                mask:dynamic="$money($input, ',', '.', 0)"
+                placeholder="200.000"
+            >
+                <x-slot name="iconLeading">
+                    <span class="text-sm text-zinc-500">Rp</span>
+                </x-slot>
+            </flux:input>
 
             <flux:checkbox.group wire:model.live="peserta" label="Ditanggung oleh">
                 @foreach ($this->anggota as $anggota)
@@ -299,8 +395,8 @@ new #[Title('Tambah tagihan')] class extends Component {
         </flux:card>
 
         <div class="flex justify-end gap-2">
-            <flux:button :href="route('grup.show', $grup)" variant="filled" wire:navigate>Batal</flux:button>
-            <flux:button variant="primary" type="submit" data-test="simpan-tagihan">Simpan tagihan</flux:button>
+            <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="filled" wire:navigate>Batal</flux:button>
+            <flux:button variant="primary" type="submit" data-test="simpan-tagihan">{{ $tagihan ? 'Simpan perubahan' : 'Simpan tagihan' }}</flux:button>
         </div>
     </form>
 </section>

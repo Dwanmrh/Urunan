@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusPembayaran;
 use Database\Factories\GrupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -27,6 +28,18 @@ class Grup extends Model
 {
     /** @use HasFactory<GrupFactory> */
     use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'dibuat_oleh' => 'integer',
+        ];
+    }
 
     /**
      * Isi kode undangan secara otomatis saat grup dibuat.
@@ -126,11 +139,13 @@ class Grup extends Model
             ->pluck('jumlah', 'anggota_grup_id');
 
         $membayar = $this->pembayaran()
+            ->where('status', StatusPembayaran::Diterima->value)
             ->selectRaw('dari_anggota_id, SUM(jumlah) as jumlah')
             ->groupBy('dari_anggota_id')
             ->pluck('jumlah', 'dari_anggota_id');
 
         $menerima = $this->pembayaran()
+            ->where('status', StatusPembayaran::Diterima->value)
             ->selectRaw('ke_anggota_id, SUM(jumlah) as jumlah')
             ->groupBy('ke_anggota_id')
             ->pluck('jumlah', 'ke_anggota_id');

@@ -109,7 +109,17 @@ new #[Title('Detail grup')] class extends Component {
     <div class="mb-6">
         <flux:button :href="route('grup.index')" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">Semua grup</flux:button>
         <flux:heading size="xl" level="1">{{ $grup->nama }}</flux:heading>
-        <flux:subheading size="lg">Kode undangan: {{ $grup->kode_undangan }}</flux:subheading>
+        <flux:subheading size="lg" class="mb-4">{{ $this->anggotaDenganSaldo->count() }} anggota</flux:subheading>
+
+        <div class="max-w-xl">
+            <flux:input
+                :value="route('grup.gabung', $grup->kode_undangan)"
+                label="Link undangan"
+                description="Bagikan ke grup WhatsApp. Teman yang membuka link ini bisa daftar lalu bergabung."
+                readonly
+                copyable
+            />
+        </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">

@@ -26,6 +26,19 @@ class AnggotaGrup extends Model
     use HasFactory;
 
     /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'grup_id' => 'integer',
+            'user_id' => 'integer',
+        ];
+    }
+
+    /**
      * @return BelongsTo<Grup, $this>
      */
     public function grup(): BelongsTo
