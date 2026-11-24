@@ -58,6 +58,30 @@ new #[Title('Notifikasi')] class extends Component {
 
         unset($this->daftar);
     }
+
+    /**
+     * Hapus satu notifikasi milik user.
+     */
+    public function hapus(string $id): void
+    {
+        Auth::user()->notifications()->whereKey($id)->delete();
+
+        unset($this->daftar);
+
+        \Flux\Flux::toast(text: __('Notifikasi dihapus.'));
+    }
+
+    /**
+     * Hapus semua notifikasi yang sudah dibaca.
+     */
+    public function hapusYangSudahDibaca(): void
+    {
+        $jumlah = Auth::user()->readNotifications()->delete();
+
+        unset($this->daftar);
+
+        \Flux\Flux::toast(variant: 'success', text: trans_choice(':jumlah notifikasi dihapus.', $jumlah, ['jumlah' => $jumlah]));
+    }
 }; ?>
 
 <section class="w-full max-w-2xl" wire:poll.30s>
@@ -69,9 +93,27 @@ new #[Title('Notifikasi')] class extends Component {
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <flux:heading size="xl" level="1">{{ __('Notifikasi') }}</flux:heading>
 
-        @if ($this->daftar->contains(fn ($notifikasi) => $notifikasi->read_at === null))
-            <flux:button wire:click="tandaiSemuaDibaca" size="sm" icon="check" data-test="tandai-semua-dibaca">{{ __('Tandai semua dibaca') }}</flux:button>
-        @endif
+        <div class="flex flex-wrap gap-2">
+            @if ($this->daftar->contains(fn ($notifikasi) => $notifikasi->read_at === null))
+                <flux:button wire:click="tandaiSemuaDibaca" size="sm" icon="check" data-test="tandai-semua-dibaca">{{ __('Tandai semua dibaca') }}</flux:button>
+            @endif
+
+            @if ($this->daftar->contains(fn ($notifikasi) => $notifikasi->read_at !== null))
+                <flux:button
+                    size="sm"
+                    icon="trash"
+                    variant="ghost"
+                    data-test="hapus-sudah-dibaca"
+                    x-on:click="$dispatch('konfirmasi', {
+                        judul: {{ \Illuminate\Support\Js::from(__('Hapus notifikasi yang sudah dibaca?')) }},
+                        pesan: {{ \Illuminate\Support\Js::from(__('Notifikasi yang belum dibaca tetap disimpan. Tagihan dan pembayaranmu tidak ikut terhapus.')) }},
+                        tombol: {{ \Illuminate\Support\Js::from(__('Hapus')) }},
+                        bahaya: true,
+                        aksi: () => $wire.hapusYangSudahDibaca(),
+                    })"
+                >{{ __('Hapus yang sudah dibaca') }}</flux:button>
+            @endif
+        </div>
     </div>
 
     @if ($this->daftar->isEmpty())
@@ -83,11 +125,11 @@ new #[Title('Notifikasi')] class extends Component {
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach ($this->daftar as $notifikasi)
                     @php($teks = \App\Notifications\NotifikasiUrunan::teksUntuk($notifikasi))
-                    <li wire:key="notifikasi-{{ $notifikasi->id }}">
+                    <li wire:key="notifikasi-{{ $notifikasi->id }}" class="group flex items-stretch">
                         <button
                             type="button"
                             wire:click="buka('{{ $notifikasi->id }}')"
-                            class="flex w-full items-start gap-3 px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                            class="flex min-w-0 flex-1 items-start gap-3 py-3 ps-4 pe-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-700"
                         >
                             <span @class([
                                 'mt-2 size-2 shrink-0 rounded-full',
@@ -104,6 +146,18 @@ new #[Title('Notifikasi')] class extends Component {
                             @if ($notifikasi->read_at === null)
                                 <span class="sr-only">{{ __('Belum dibaca') }}</span>
                             @endif
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:click="hapus('{{ $notifikasi->id }}')"
+                            wire:loading.attr="disabled"
+                            class="flex shrink-0 items-center px-3 text-zinc-400 hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 dark:hover:bg-red-950/40"
+                            aria-label="{{ __('Hapus notifikasi') }}"
+                            title="{{ __('Hapus notifikasi') }}"
+                            data-test="hapus-notifikasi"
+                        >
+                            <flux:icon.trash variant="micro" />
                         </button>
                     </li>
                 @endforeach

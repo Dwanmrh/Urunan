@@ -1,6 +1,6 @@
 <x-layouts::auth :title="__('Reset password')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Reset password')" :description="__('Please enter your new password below')" />
+        <x-auth-header ikon="lock-closed" :title="__('Reset password')" :description="__('Please enter your new password below')" />
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
@@ -17,6 +17,7 @@
                 :label="__('Email')"
                 type="email"
                 required
+                :readonly="filled(request('email'))"
                 autocomplete="email"
             />
 

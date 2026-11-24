@@ -125,6 +125,14 @@ class Grup extends Model
     }
 
     /**
+     * @return HasMany<TagihanRutin, $this>
+     */
+    public function tagihanRutin(): HasMany
+    {
+        return $this->hasMany(TagihanRutin::class, 'grup_id');
+    }
+
+    /**
      * @return HasMany<Pembayaran, $this>
      */
     public function pembayaran(): HasMany

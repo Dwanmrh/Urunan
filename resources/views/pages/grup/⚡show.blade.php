@@ -4,6 +4,7 @@ use App\Actions\Urunan\SederhanakanUtang;
 use App\Models\AnggotaGrup;
 use App\Models\Grup;
 use App\Models\Tagihan;
+use App\Models\TagihanRutin;
 use App\Support\BatasAksi;
 use Flux\Flux;
 use Illuminate\Support\Collection;
@@ -88,6 +89,46 @@ new #[Title('Detail grup')] class extends Component {
     public function daftarTagihan(): Collection
     {
         return $this->grup->tagihan()->with('pembayar')->latest('tanggal')->latest('id')->get();
+    }
+
+    /**
+     * @return Collection<int, TagihanRutin>
+     */
+    #[Computed]
+    public function daftarRutin(): Collection
+    {
+        return $this->grup->tagihanRutin()->with('pembayar')->orderByDesc('aktif')->orderBy('jadwal_berikutnya')->get();
+    }
+
+    /**
+     * Jeda atau lanjutkan tagihan rutin.
+     */
+    public function alihkanRutin(int $id): void
+    {
+        $rutin = $this->rutinYangBolehDiubah($id);
+
+        if ($rutin->aktif) {
+            $rutin->update(['aktif' => false]);
+            Flux::toast(text: __('Tagihan rutin :judul dijeda.', ['judul' => $rutin->judul]));
+        } else {
+            $rutin->lanjutkan();
+            Flux::toast(variant: 'success', text: __('Tagihan rutin :judul dilanjutkan.', ['judul' => $rutin->judul]));
+        }
+
+        unset($this->daftarRutin);
+    }
+
+    /**
+     * Hentikan tagihan rutin. Tagihan yang sudah tercatat tetap ada.
+     */
+    public function hapusRutin(int $id): void
+    {
+        $rutin = $this->rutinYangBolehDiubah($id);
+        $rutin->delete();
+
+        unset($this->daftarRutin);
+
+        Flux::toast(variant: 'success', text: __('Tagihan rutin dihentikan. Tagihan yang sudah tercatat tetap ada.'));
     }
 
     /**
@@ -227,6 +268,20 @@ new #[Title('Detail grup')] class extends Component {
         abort_if($anggota->user_id !== null, 403);
 
         return $anggota;
+    }
+
+    /**
+     * Ambil tagihan rutin di grup ini yang boleh diubah user.
+     */
+    private function rutinYangBolehDiubah(int $id): TagihanRutin
+    {
+        $this->pastikanAnggota();
+
+        $rutin = $this->grup->tagihanRutin()->findOrFail($id);
+
+        abort_unless($rutin->bisaDiubahOleh(Auth::user()), 403);
+
+        return $rutin;
     }
 
     /**
@@ -378,6 +433,65 @@ new #[Title('Detail grup')] class extends Component {
                 @endif
             </flux:card>
 
+            @if ($this->daftarRutin->isNotEmpty())
+                <flux:card class="space-y-4" data-tur="tagihan-rutin">
+                    <div class="flex items-center gap-2">
+                        <flux:icon.arrow-path class="size-5 text-indigo-500" />
+                        <flux:heading size="lg" level="2">{{ __('Tagihan rutin') }}</flux:heading>
+                    </div>
+
+                    <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                        @foreach ($this->daftarRutin as $rutin)
+                            <li wire:key="rutin-{{ $rutin->id }}" class="flex items-center justify-between gap-3 py-3" data-test="tagihan-rutin">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <flux:heading class="truncate">{{ $rutin->judul }}</flux:heading>
+                                        @if ($rutin->aktif)
+                                            <flux:badge size="sm" color="indigo" inset="top bottom">{{ $rutin->frekuensi->label() }}</flux:badge>
+                                        @else
+                                            <flux:badge size="sm" color="zinc" inset="top bottom">{{ __('Dijeda') }}</flux:badge>
+                                        @endif
+                                    </div>
+                                    <flux:text size="sm">
+                                        <x-rupiah :jumlah="$rutin->total" />
+                                        · {{ __('ke :nama', ['nama' => $rutin->pembayar->nama]) }}
+                                        @if ($rutin->aktif)
+                                            · {{ __('berikutnya :tanggal', ['tanggal' => $rutin->jadwal_berikutnya->format('d/m/Y')]) }}
+                                        @endif
+                                    </flux:text>
+                                </div>
+
+                                @if ($rutin->bisaDiubahOleh(auth()->user()))
+                                    <flux:dropdown align="end">
+                                        <flux:button icon="ellipsis-horizontal" size="sm" variant="ghost" aria-label="{{ __('Kelola tagihan rutin') }}" data-test="kelola-rutin" />
+                                        <flux:menu>
+                                            <flux:menu.item
+                                                :icon="$rutin->aktif ? 'pause' : 'play'"
+                                                wire:click="alihkanRutin({{ $rutin->id }})"
+                                                data-test="alihkan-rutin"
+                                            >{{ $rutin->aktif ? __('Jeda') : __('Lanjutkan') }}</flux:menu.item>
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                icon="trash"
+                                                variant="danger"
+                                                data-test="hapus-rutin"
+                                                x-on:click="$dispatch('konfirmasi', {
+                                                    judul: {{ \Illuminate\Support\Js::from(__('Hentikan :judul?', ['judul' => $rutin->judul])) }},
+                                                    pesan: {{ \Illuminate\Support\Js::from(__('Tagihan tidak akan dicatat otomatis lagi. Tagihan yang sudah tercatat tetap ada.')) }},
+                                                    tombol: {{ \Illuminate\Support\Js::from(__('Hentikan')) }},
+                                                    bahaya: true,
+                                                    aksi: () => $wire.hapusRutin({{ $rutin->id }}),
+                                                })"
+                                            >{{ __('Hentikan') }}</flux:menu.item>
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </flux:card>
+            @endif
+
             <flux:card class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <flux:heading size="lg" level="2">{{ __('Tagihan') }}</flux:heading>
@@ -392,7 +506,12 @@ new #[Title('Detail grup')] class extends Component {
                             <li wire:key="tagihan-{{ $tagihan->id }}">
                                 <a href="{{ route('tagihan.show', [$grup, $tagihan]) }}" wire:navigate class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0 hover:opacity-80">
                                     <div>
-                                        <flux:heading>{{ $tagihan->judul }}</flux:heading>
+                                        <flux:heading class="flex items-center gap-1.5">
+                                            @if ($tagihan->tagihan_rutin_id)
+                                                <flux:icon.arrow-path variant="micro" class="shrink-0 text-indigo-500" aria-label="{{ __('Tagihan rutin') }}" />
+                                            @endif
+                                            <span class="truncate">{{ $tagihan->judul }}</span>
+                                        </flux:heading>
                                         <flux:text>{{ __('Dibayar dulu oleh :nama, :tanggal', ['nama' => $tagihan->pembayar->nama, 'tanggal' => $tagihan->tanggal->format('d/m/Y')]) }}</flux:text>
                                     </div>
                                     <x-rupiah :jumlah="$tagihan->total" class="font-semibold" />

@@ -13,7 +13,13 @@ class AturBahasa
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $bahasa = $request->user()?->locale ?? ($request->hasSession() ? $request->session()->get('bahasa') : null);
+        $bahasaSesi = $request->hasSession() ? $request->session()->get('bahasa') : null;
+        $bahasa = $request->user()?->locale ?? $bahasaSesi;
+
+        // Pilihan bahasa sebelum login disimpan ke akun, supaya email dan notifikasi ikut bahasa itu.
+        if ($request->user() !== null && $request->user()->locale === null && is_string($bahasaSesi) && array_key_exists($bahasaSesi, config('urunan.bahasa'))) {
+            $request->user()->forceFill(['locale' => $bahasaSesi])->save();
+        }
 
         if (is_string($bahasa) && array_key_exists($bahasa, config('urunan.bahasa'))) {
             app()->setLocale($bahasa);

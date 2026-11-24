@@ -8,6 +8,7 @@ use App\Enums\StatusPembayaran;
 use App\Notifications\BuktiBayarDitolak;
 use App\Notifications\BuktiBayarMasuk;
 use App\Notifications\PembayaranDikonfirmasi;
+use App\Notifications\PengingatBayar;
 use App\Notifications\TagihanBaru;
 use Database\Factories\TagihanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\DB;
  * @property int $dibayar_oleh
  * @property CaraBagi $cara_bagi
  * @property Carbon $tanggal
+ * @property int|null $tagihan_rutin_id
+ * @property Carbon|null $diingatkan_pada
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -37,6 +40,16 @@ class Tagihan extends Model
 {
     /** @use HasFactory<TagihanFactory> */
     use HasFactory;
+
+    /**
+     * Pengingat otomatis baru dikirim setelah sekian hari sejak tanggal tagihan.
+     */
+    public const HARI_SEBELUM_DIINGATKAN = 3;
+
+    /**
+     * Tagihan yang lebih lama dari ini tidak diingatkan otomatis lagi.
+     */
+    public const BATAS_HARI_PENGINGAT = 60;
 
     /**
      * Get the attributes that should be cast.
@@ -51,6 +64,8 @@ class Tagihan extends Model
             'total' => 'integer',
             'cara_bagi' => CaraBagi::class,
             'tanggal' => 'date',
+            'tagihan_rutin_id' => 'integer',
+            'diingatkan_pada' => 'datetime',
         ];
     }
 
@@ -68,6 +83,14 @@ class Tagihan extends Model
     public function pembayar(): BelongsTo
     {
         return $this->belongsTo(AnggotaGrup::class, 'dibayar_oleh');
+    }
+
+    /**
+     * @return BelongsTo<TagihanRutin, $this>
+     */
+    public function rutin(): BelongsTo
+    {
+        return $this->belongsTo(TagihanRutin::class, 'tagihan_rutin_id');
     }
 
     /**
@@ -338,6 +361,37 @@ class Tagihan extends Model
         }
 
         return $pembayaran;
+    }
+
+    /**
+     * Kirim pengingat ke anggota yang punya akun dan bagiannya belum lunas.
+     *
+     * Anggota yang buktinya sedang menunggu konfirmasi tidak diingatkan.
+     *
+     * @return int Jumlah orang yang diingatkan.
+     */
+    public function ingatkanYangBelumBayar(?User $oleh = null): int
+    {
+        $dikirim = $this->statusPelunasan()
+            ->filter(fn (array $baris): bool => ! $baris['pembayar']
+                && $baris['sisa'] > 0
+                && $baris['menunggu'] === null
+                && $baris['anggota']->user !== null
+                && $baris['anggota']->user_id !== $oleh?->id)
+            ->each(fn (array $baris) => $baris['anggota']->user->notify(new PengingatBayar($this, $baris['sisa'])))
+            ->count();
+
+        $this->forceFill(['diingatkan_pada' => now()])->save();
+
+        return $dikirim;
+    }
+
+    /**
+     * Apakah tagihan ini baru saja diingatkan, supaya tombol ingatkan tidak dipakai untuk spam.
+     */
+    public function baruDiingatkan(): bool
+    {
+        return $this->diingatkan_pada !== null && $this->diingatkan_pada->gt(now()->subDay());
     }
 
     /**

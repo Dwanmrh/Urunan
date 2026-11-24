@@ -3,10 +3,12 @@
 use App\Actions\Urunan\BagiRupiah;
 use App\Actions\Urunan\FormatRupiah;
 use App\Enums\CaraBagi;
+use App\Enums\Frekuensi;
 use App\Models\AnggotaGrup;
 use App\Models\Grup;
 use App\Models\ItemTagihan;
 use App\Models\Tagihan;
+use App\Models\TagihanRutin;
 use App\Support\BatasAksi;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -37,6 +39,10 @@ new #[Title('Tagihan')] class extends Component {
 
     /** @var list<array{nama: string, harga: string, penanggung: list<string>}> */
     public array $item = [];
+
+    public bool $ulangi = false;
+
+    public string $frekuensi = 'bulanan';
 
     /**
      * Mount the component.
@@ -105,6 +111,27 @@ new #[Title('Tagihan')] class extends Component {
     }
 
     /**
+     * Tanggal tagihan rutin berikutnya kalau opsi ulangi dipilih.
+     */
+    #[Computed]
+    public function jadwalBerikutnya(): ?string
+    {
+        $frekuensi = Frekuensi::tryFrom($this->frekuensi);
+
+        if ($frekuensi === null || preg_match('#^\d{2}/\d{2}/\d{4}$#', $this->tanggal) !== 1) {
+            return null;
+        }
+
+        try {
+            $mulai = Carbon::createFromFormat('!d/m/Y', $this->tanggal);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $frekuensi->tanggalKe($mulai, 1)->format('d/m/Y');
+    }
+
+    /**
      * Tambah satu baris item kosong.
      */
     public function tambahItem(): void
@@ -164,6 +191,11 @@ new #[Title('Tagihan')] class extends Component {
             'caraBagi' => ['required', Rule::enum(CaraBagi::class)],
         ];
 
+        if ($this->tagihan === null && ! $perItem && $this->ulangi) {
+            $data['frekuensi'] = $this->frekuensi;
+            $aturan['frekuensi'] = ['required', Rule::enum(Frekuensi::class)];
+        }
+
         if ($perItem) {
             $aturan += [
                 'item' => ['required', 'array', 'min:1'],
@@ -205,6 +237,10 @@ new #[Title('Tagihan')] class extends Component {
             $tagihan = $this->tagihan;
         } else {
             $tagihan = Tagihan::catat($this->grup, $isi, Auth::user());
+
+            if (! $perItem && $this->ulangi) {
+                TagihanRutin::mulaiDari($tagihan, Frekuensi::from($this->frekuensi), Auth::user());
+            }
         }
 
         $this->redirectRoute('tagihan.show', ['grup' => $this->grup, 'tagihan' => $tagihan], navigate: true);
@@ -282,6 +318,8 @@ new #[Title('Tagihan')] class extends Component {
             'dibayarOleh.in' => __('Pembayar harus anggota grup ini.'),
             'caraBagi.required' => __('Pilih cara membagi.'),
             'caraBagi.enum' => __('Cara membagi tidak valid.'),
+            'frekuensi.required' => __('Pilih seberapa sering tagihan diulang.'),
+            'frekuensi.enum' => __('Pilihan pengulangan tidak valid.'),
             'total.required' => __('Total tagihan wajib diisi.'),
             'total.integer' => __('Total harus berupa angka.'),
             'total.min' => __('Total minimal Rp 1.'),
@@ -318,6 +356,10 @@ new #[Title('Tagihan')] class extends Component {
 
     @if ($tagihan)
         <flux:callout icon="information-circle" class="mb-6" text="{{ __('Pembayaran yang sudah diterima tetap tercatat. Bukti bayar yang masih menunggu konfirmasi akan dibatalkan dan perlu dikirim ulang.') }}" />
+
+        @if ($tagihan->tagihan_rutin_id)
+            <flux:callout icon="arrow-path" color="indigo" class="-mt-3 mb-6" text="{{ __('Tagihan ini dibuat dari tagihan rutin. Perubahan di sini hanya berlaku untuk tagihan ini, bukan untuk bulan atau minggu berikutnya.') }}" />
+        @endif
     @endif
 
     <form wire:submit="simpan" class="space-y-6">
@@ -340,7 +382,7 @@ new #[Title('Tagihan')] class extends Component {
                 }"
             >
                 <flux:input
-                    wire:model="tanggal"
+                    wire:model.blur="tanggal"
                     label="{{ __('Tanggal') }}"
                     type="text"
                     inputmode="numeric"
@@ -423,6 +465,35 @@ new #[Title('Tagihan')] class extends Component {
                     <flux:checkbox value="{{ $anggota->id }}" label="{{ $anggota->nama }}" wire:key="peserta-{{ $anggota->id }}" />
                 @endforeach
             </flux:checkbox.group>
+
+            @unless ($tagihan)
+                <div class="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 dark:border-indigo-500/30 dark:bg-indigo-500/10" data-tur="ulangi">
+                    <flux:switch
+                        wire:model.live="ulangi"
+                        label="{{ __('Ulangi otomatis') }}"
+                        description="{{ __('Cocok untuk wifi kos, listrik, atau langganan bareng. Tagihan berikutnya dicatat sendiri dan anggota langsung dikabari.') }}"
+                        data-test="ulangi-tagihan"
+                    />
+
+                    @if ($ulangi)
+                        <div class="mt-4 space-y-2">
+                            <flux:radio.group wire:model.live="frekuensi" variant="segmented" size="sm">
+                                @foreach (\App\Enums\Frekuensi::cases() as $pilihan)
+                                    <flux:radio value="{{ $pilihan->value }}" label="{{ $pilihan->label() }}" wire:key="frekuensi-{{ $pilihan->value }}" />
+                                @endforeach
+                            </flux:radio.group>
+                            <flux:error name="frekuensi" />
+
+                            @if ($this->jadwalBerikutnya)
+                                <flux:text size="sm" class="flex items-center gap-1.5">
+                                    <flux:icon.arrow-path variant="micro" class="text-indigo-500" />
+                                    {{ __('Tagihan berikutnya: :tanggal', ['tanggal' => $this->jadwalBerikutnya]) }}
+                                </flux:text>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endunless
         @endif
 
         <flux:card class="space-y-3">

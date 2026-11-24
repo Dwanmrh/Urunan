@@ -93,6 +93,44 @@ new #[Title('Detail tagihan')] class extends Component {
     }
 
     /**
+     * Jumlah anggota punya akun yang belum lunas dan belum mengirim bukti.
+     */
+    #[Computed]
+    public function bisaDiingatkan(): int
+    {
+        return $this->statusPelunasan
+            ->filter(fn (array $baris): bool => ! $baris['pembayar']
+                && $baris['sisa'] > 0
+                && $baris['menunggu'] === null
+                && $baris['anggota']->user_id !== null
+                && $baris['anggota']->user_id !== Auth::id())
+            ->count();
+    }
+
+    /**
+     * Kirim pengingat ke anggota yang belum bayar. Paling sering sekali sehari per tagihan.
+     */
+    public function ingatkan(): void
+    {
+        $this->pastikanPengelola();
+
+        if ($this->tagihan->baruDiingatkan()) {
+            Flux::toast(variant: 'warning', text: __('Tagihan ini sudah diingatkan dalam 24 jam terakhir. Coba lagi besok, ya.'));
+
+            return;
+        }
+
+        $jumlah = $this->tagihan->ingatkanYangBelumBayar(Auth::user());
+
+        Flux::toast(
+            variant: $jumlah > 0 ? 'success' : 'warning',
+            text: $jumlah > 0
+                ? trans_choice('Pengingat dikirim ke :jumlah orang.', $jumlah, ['jumlah' => $jumlah])
+                : __('Tidak ada yang perlu diingatkan.'),
+        );
+    }
+
+    /**
      * Catat bahwa seorang anggota sudah membayar langsung, misalnya tunai.
      */
     public function tandaiLunas(int $idAnggota): void
@@ -287,7 +325,25 @@ new #[Title('Detail tagihan')] class extends Component {
     @endif
 
     <flux:card class="space-y-3" data-tur="bagian-tiap-orang">
-        <flux:heading size="lg" level="2">{{ __('Bagian tiap orang') }}</flux:heading>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <flux:heading size="lg" level="2">{{ __('Bagian tiap orang') }}</flux:heading>
+
+            @if ($this->bisaMengelola && $this->bisaDiingatkan > 0)
+                <flux:button
+                    wire:click="ingatkan"
+                    size="sm"
+                    icon="bell-alert"
+                    :disabled="$tagihan->baruDiingatkan()"
+                    data-test="ingatkan"
+                >
+                    {{ $tagihan->baruDiingatkan() ? __('Sudah diingatkan') : __('Ingatkan yang belum bayar') }}
+                </flux:button>
+            @endif
+        </div>
+
+        @if ($this->bisaMengelola && $this->bisaDiingatkan > 0)
+            <flux:text size="sm">{{ __('Yang belum bayar juga diingatkan otomatis :hari hari setelah tanggal tagihan, lalu seminggu sekali.', ['hari' => \App\Models\Tagihan::HARI_SEBELUM_DIINGATKAN]) }}</flux:text>
+        @endif
 
         @unless ($this->bisaMengelola)
             <flux:text>{{ __('Hanya :nama yang bisa menandai lunas dan mengonfirmasi bukti bayar.', ['nama' => $tagihan->pembayar->nama]) }}</flux:text>

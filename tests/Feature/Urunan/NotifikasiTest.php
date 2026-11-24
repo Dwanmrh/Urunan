@@ -112,3 +112,37 @@ test('halaman notifikasi menampilkan pesan, membuka tagihan, dan bisa menandai s
 
     expect($userSinta->unreadNotifications()->count())->toBe(0);
 });
+
+test('user bisa menghapus satu notifikasi miliknya, tapi tidak milik orang lain', function () {
+    ['userDwan' => $userDwan, 'userSinta' => $userSinta, 'grup' => $grup] = grupDenganDuaAkun();
+    $tagihan = Tagihan::factory()->for($grup)->create();
+    $userDwan->notify(new TagihanBaru($tagihan, 10000));
+    $userSinta->notify(new TagihanBaru($tagihan, 10000));
+    $milikSinta = $userSinta->notifications()->first();
+
+    $this->actingAs($userDwan);
+
+    Livewire::test('pages::notifikasi.index')
+        ->call('hapus', $userDwan->notifications()->first()->id)
+        ->call('hapus', $milikSinta->id);
+
+    expect($userDwan->notifications()->count())->toBe(0);
+    expect($userSinta->notifications()->count())->toBe(1);
+});
+
+test('hapus yang sudah dibaca menyisakan notifikasi yang belum dibaca', function () {
+    ['userDwan' => $userDwan, 'grup' => $grup] = grupDenganDuaAkun();
+    $tagihan = Tagihan::factory()->for($grup)->create();
+    $userDwan->notify(new TagihanBaru($tagihan, 10000));
+    $userDwan->notify(new TagihanBaru($tagihan, 20000));
+    $userDwan->notifications()->first()->markAsRead();
+
+    $this->actingAs($userDwan);
+
+    Livewire::test('pages::notifikasi.index')
+        ->assertSee(__('Hapus yang sudah dibaca'))
+        ->call('hapusYangSudahDibaca');
+
+    expect($userDwan->notifications()->count())->toBe(1);
+    expect($userDwan->unreadNotifications()->count())->toBe(1);
+});
