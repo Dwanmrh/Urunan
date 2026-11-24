@@ -18,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('grup', 'pages::grup.index')->name('grup.index');
     Route::livewire('grup/{grup}', 'pages::grup.show')->name('grup.show');
-    Route::livewire('gabung/{kode}', 'pages::grup.gabung')->name('grup.gabung');
+    Route::livewire('gabung/{kode}', 'pages::grup.gabung')->middleware('throttle:30,1')->name('grup.gabung');
     Route::livewire('notifikasi', 'pages::notifikasi.index')->name('notifikasi.index');
     Route::livewire('statistik', 'pages::statistik.index')->middleware('can:lihat-statistik')->name('statistik.index');
 

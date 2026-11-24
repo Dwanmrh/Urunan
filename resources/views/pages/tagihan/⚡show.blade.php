@@ -4,6 +4,7 @@ use App\Models\AnggotaGrup;
 use App\Models\Grup;
 use App\Models\ItemTagihan;
 use App\Models\Tagihan;
+use App\Support\BatasAksi;
 use Flux\Flux;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -149,13 +150,18 @@ new #[Title('Detail tagihan')] class extends Component {
         abort_if($anggota === null, 403);
 
         $this->validate(
-            ['bukti' => ['required', 'image', 'max:4096']],
+            ['bukti' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096']],
             [
                 'bukti.required' => __('Pilih foto bukti transfer dulu.'),
-                'bukti.image' => __('Bukti harus berupa gambar.'),
+                'bukti.file' => __('Bukti harus berupa gambar.'),
+                'bukti.mimes' => __('Bukti harus berupa foto JPG, PNG, atau WEBP.'),
                 'bukti.max' => __('Ukuran gambar maksimal 4 MB.'),
             ],
         );
+
+        if (! BatasAksi::boleh('kirim-bukti', 10)) {
+            return;
+        }
 
         $path = $this->bukti->store('bukti-pembayaran', 'local');
 

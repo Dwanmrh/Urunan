@@ -29,11 +29,22 @@ new #[Title('Notifikasi')] class extends Component {
 
         $url = $notifikasi->data['url'] ?? null;
 
-        if (is_string($url) && str_starts_with($url, '/')) {
-            $this->redirect($url, navigate: true);
+        if (! is_string($url) || ! str_starts_with($url, '/') || str_starts_with($url, '//')) {
+            unset($this->daftar);
 
             return;
         }
+
+        if (preg_match('#^/grup/(\d+)/tagihan/(\d+)#', $url, $cocok) === 1
+            && ! \App\Models\Tagihan::whereKey($cocok[2])->where('grup_id', $cocok[1])->exists()) {
+            unset($this->daftar);
+
+            \Flux\Flux::toast(variant: 'warning', text: __('Tagihan ini sudah dihapus.'));
+
+            return;
+        }
+
+        $this->redirect($url, navigate: true);
 
         unset($this->daftar);
     }

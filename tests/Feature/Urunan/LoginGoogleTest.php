@@ -110,3 +110,19 @@ test('teman yang membuka link undangan lalu masuk dengan Google dibawa kembali k
 
     $this->get(route('google.callback'))->assertRedirect(route('grup.gabung', $grup->kode_undangan));
 });
+
+test('akun berisi email yang belum terverifikasi dicabut akses lamanya saat pemilik asli masuk dengan Google', function () {
+    $penyusup = User::factory()->unverified()->create(['email' => 'sinta@gmail.com', 'password' => 'rahasia-penyusup']);
+    $hashLama = $penyusup->password;
+
+    palsukanAkunGoogle();
+
+    $this->get(route('google.callback'))->assertRedirect(config('fortify.home'));
+
+    $user = $penyusup->fresh();
+
+    expect($user->password)->not->toBe($hashLama);
+    expect($user->google_id)->toBe('google-123');
+    expect($user->email_verified_at)->not->toBeNull();
+    $this->assertAuthenticatedAs($user);
+});

@@ -2,6 +2,7 @@
 
 use App\Models\AnggotaGrup;
 use App\Models\Grup;
+use App\Support\BatasAksi;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -57,6 +58,10 @@ new #[Title('Grup patungan')] class extends Component {
                 'nama.max' => __('Nama grup maksimal 100 karakter.'),
             ],
         );
+
+        if (! BatasAksi::boleh('buat-grup', 10)) {
+            return;
+        }
 
         $grup = Grup::buatUntuk(Auth::user(), $validated['nama']);
 

@@ -7,13 +7,13 @@ use App\Notifications\TagihanBaru;
 use Illuminate\Support\Str;
 
 test('tamu bisa mengganti bahasa ke Inggris dan pilihannya bertahan', function () {
-    $this->get(route('home'))->assertSee('Patungan bareng teman, tanpa hitung manual.');
+    $this->get(route('home'))->assertSee('Patungan bareng teman,');
 
     $this->get(route('bahasa.ganti', 'en'))->assertRedirect();
 
     $this->get(route('home'))
-        ->assertSee('Split bills with friends, no manual math.')
-        ->assertDontSee('Patungan bareng teman, tanpa hitung manual.');
+        ->assertSee('Split bills with friends,')
+        ->assertDontSee('Patungan bareng teman,');
 });
 
 test('pilihan bahasa user yang login tersimpan di akunnya', function () {

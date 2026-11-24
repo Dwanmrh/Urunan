@@ -17,6 +17,9 @@ class GantiBahasaController extends Controller
         $request->session()->put('bahasa', $bahasa);
         $request->user()?->forceFill(['locale' => $bahasa])->save();
 
-        return redirect()->back(fallback: route('home'));
+        $sebelumnya = url()->previous();
+        $situsSendiri = parse_url($sebelumnya, PHP_URL_HOST) === $request->getHost();
+
+        return redirect()->to($situsSendiri ? $sebelumnya : route('home'));
     }
 }

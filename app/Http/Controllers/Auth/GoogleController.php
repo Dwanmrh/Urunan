@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
@@ -58,6 +59,10 @@ class GoogleController extends Controller
         $user = User::where('google_id', $akunGoogle->getId())->first()
             ?? User::where('email', $email)->first();
 
+        if ($user !== null && $user->google_id === null && $user->email_verified_at === null) {
+            $this->amankanAkunBelumTerverifikasi($user);
+        }
+
         if ($user === null) {
             $user = User::create([
                 'name' => $akunGoogle->getName() ?: Str::before($email, '@'),
@@ -92,5 +97,27 @@ class GoogleController extends Controller
     private function gagal(string $pesan): RedirectResponse
     {
         return redirect()->route('login')->with('status', $pesan);
+    }
+
+    /**
+     * Akun dengan email ini pernah didaftarkan tapi emailnya belum pernah dibuktikan,
+     * jadi pendaftarnya belum tentu pemilik email. Pemilik asli kini terbukti lewat Google,
+     * maka cara masuk lama dicabut: kata sandi diganti, 2FA dan passkey dihapus, sesi lain diakhiri.
+     */
+    private function amankanAkunBelumTerverifikasi(User $user): void
+    {
+        $user->forceFill([
+            'password' => Str::random(40),
+            'remember_token' => null,
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ])->save();
+
+        DB::table('passkeys')->where('user_id', $user->id)->delete();
+
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        }
     }
 }

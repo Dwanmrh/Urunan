@@ -7,6 +7,8 @@ use App\Models\AnggotaGrup;
 use App\Models\Grup;
 use App\Models\ItemTagihan;
 use App\Models\Tagihan;
+use App\Support\BatasAksi;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -55,7 +57,7 @@ new #[Title('Tagihan')] class extends Component {
             return;
         }
 
-        $this->tanggal = now()->toDateString();
+        $this->tanggal = now()->format('d/m/Y');
         $this->dibayarOleh = (string) $grup->anggota()->where('user_id', Auth::id())->value('id');
         $this->peserta = $this->semuaIdAnggota();
         $this->tambahItem();
@@ -135,6 +137,9 @@ new #[Title('Tagihan')] class extends Component {
             abort_unless($this->tagihan->bisaDiubahOleh(Auth::user()), 403);
         }
 
+        // Validasi di bawah tidak memakai $this->validate(), jadi pesan error lama dibersihkan manual.
+        $this->resetErrorBag();
+
         $idAnggota = $this->anggota->pluck('id')->all();
         $perItem = $this->caraBagi === CaraBagi::PerItem->value;
 
@@ -154,7 +159,7 @@ new #[Title('Tagihan')] class extends Component {
 
         $aturan = [
             'judul' => ['required', 'string', 'max:100'],
-            'tanggal' => ['required', 'date'],
+            'tanggal' => ['required', 'date_format:d/m/Y', 'after_or_equal:01/01/2000', 'before_or_equal:31/12/2099'],
             'dibayarOleh' => ['required', Rule::in($idAnggota)],
             'caraBagi' => ['required', Rule::enum(CaraBagi::class)],
         ];
@@ -177,9 +182,13 @@ new #[Title('Tagihan')] class extends Component {
 
         Validator::make($data, $aturan, $this->pesanValidasi())->validate();
 
+        if (! BatasAksi::boleh('simpan-tagihan', 20)) {
+            return;
+        }
+
         $isi = [
             'judul' => $this->judul,
-            'tanggal' => $this->tanggal,
+            'tanggal' => Carbon::createFromFormat('!d/m/Y', $this->tanggal)->toDateString(),
             'dibayar_oleh' => (int) $this->dibayarOleh,
             'cara_bagi' => CaraBagi::from($this->caraBagi),
             'total' => (int) $data['total'],
@@ -207,7 +216,7 @@ new #[Title('Tagihan')] class extends Component {
     private function isiDariTagihan(Tagihan $tagihan): void
     {
         $this->judul = $tagihan->judul;
-        $this->tanggal = $tagihan->tanggal->toDateString();
+        $this->tanggal = $tagihan->tanggal->format('d/m/Y');
         $this->dibayarOleh = (string) $tagihan->dibayar_oleh;
         $this->caraBagi = $tagihan->cara_bagi->value;
         $this->total = FormatRupiah::keTeks($tagihan->total);
@@ -266,7 +275,9 @@ new #[Title('Tagihan')] class extends Component {
             'judul.required' => __('Judul tagihan wajib diisi.'),
             'judul.max' => __('Judul maksimal 100 karakter.'),
             'tanggal.required' => __('Tanggal wajib diisi.'),
-            'tanggal.date' => __('Tanggal tidak valid.'),
+            'tanggal.date_format' => __('Tanggal tidak valid. Pakai format HH/BB/TTTT, misalnya 24/11/2026.'),
+            'tanggal.after_or_equal' => __('Tanggal terlalu lama, minimal tahun 2000.'),
+            'tanggal.before_or_equal' => __('Tanggal terlalu jauh ke depan.'),
             'dibayarOleh.required' => __('Pilih siapa yang membayar dulu.'),
             'dibayarOleh.in' => __('Pembayar harus anggota grup ini.'),
             'caraBagi.required' => __('Pilih cara membagi.'),
@@ -313,7 +324,38 @@ new #[Title('Tagihan')] class extends Component {
         <flux:input wire:model="judul" label="{{ __('Judul') }}" type="text" placeholder="{{ __('Contoh: Makan malam ultah Sinta') }}" required />
 
         <div class="grid gap-4 sm:grid-cols-2">
-            <flux:input wire:model="tanggal" label="{{ __('Tanggal') }}" type="date" required />
+            <div
+                x-data="{
+                    bukaKalender() {
+                        const pemilih = $refs.pemilih;
+                        const [hari, bulan, tahun] = ($wire.tanggal ?? '').split('/');
+                        pemilih.value = tahun?.length === 4 ? `${tahun}-${bulan}-${hari}` : '';
+                        try { pemilih.showPicker(); } catch { pemilih.click(); }
+                    },
+                    pilih(nilai) {
+                        if (! nilai) return;
+                        const [tahun, bulan, hari] = nilai.split('-');
+                        $wire.tanggal = `${hari}/${bulan}/${tahun}`;
+                    },
+                }"
+            >
+                <flux:input
+                    wire:model="tanggal"
+                    label="{{ __('Tanggal') }}"
+                    type="text"
+                    inputmode="numeric"
+                    mask="99/99/9999"
+                    placeholder="{{ __('HH/BB/TTTT') }}"
+                    autocomplete="off"
+                    required
+                    data-test="input-tanggal"
+                >
+                    <x-slot name="iconTrailing">
+                        <flux:button type="button" size="sm" variant="subtle" icon="calendar-days" class="-me-1" x-on:click="bukaKalender()" aria-label="{{ __('Pilih dari kalender') }}" />
+                        <input type="date" x-ref="pemilih" x-on:change="pilih($event.target.value)" class="pointer-events-none absolute end-0 bottom-0 size-px opacity-0" tabindex="-1" aria-hidden="true" />
+                    </x-slot>
+                </flux:input>
+            </div>
 
             <flux:select wire:model="dibayarOleh" label="{{ __('Dibayar dulu oleh') }}" data-tur="pembayar">
                 @foreach ($this->anggota as $anggota)

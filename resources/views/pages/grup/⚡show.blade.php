@@ -4,6 +4,7 @@ use App\Actions\Urunan\SederhanakanUtang;
 use App\Models\AnggotaGrup;
 use App\Models\Grup;
 use App\Models\Tagihan;
+use App\Support\BatasAksi;
 use Flux\Flux;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -103,6 +104,10 @@ new #[Title('Detail grup')] class extends Component {
                 'namaAnggota.max' => __('Nama anggota maksimal 60 karakter.'),
             ],
         );
+
+        if (! BatasAksi::boleh('tambah-anggota', 30)) {
+            return;
+        }
 
         $this->grup->anggota()->create(['nama' => $validated['namaAnggota']]);
 

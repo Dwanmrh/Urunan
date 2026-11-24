@@ -21,6 +21,7 @@
             this.aksi = isi.aksi ?? null;
             this.sibuk = false;
             this.buka = true;
+            this.$nextTick(() => this.$refs.batal?.focus());
         },
         async setuju() {
             if (this.sibuk) return;
@@ -42,7 +43,7 @@
     <div
         x-show="buka"
         x-cloak
-        class="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center"
+        class="fixed inset-0 z-60 flex items-end justify-center p-4 sm:items-center"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="judul-konfirmasi"
@@ -57,7 +58,7 @@
 
         <div
             x-show="buka"
-            x-trap.noscroll="buka"
+            x-trap.noscroll.noautofocus="buka"
             x-transition:enter="transition duration-200 ease-out"
             x-transition:enter-start="translate-y-4 scale-95 opacity-0"
             x-transition:enter-end="translate-y-0 scale-100 opacity-100"
@@ -77,26 +78,33 @@
             <h2 id="judul-konfirmasi" class="text-lg font-semibold text-zinc-900 dark:text-white" x-text="judul"></h2>
             <p id="pesan-konfirmasi" class="mt-2 text-sm text-zinc-600 dark:text-zinc-300" x-show="pesan" x-text="pesan"></p>
 
+            {{-- Tombol aksi di kiri dan Batal di kanan, dengan fokus awal di Batal, supaya aksi seperti hapus tidak terpencet tanpa sengaja. --}}
             <div class="mt-6 grid grid-cols-2 gap-2">
-                <button
-                    type="button"
-                    x-on:click="tutup()"
-                    x-bind:disabled="sibuk"
-                    class="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-100 px-4 text-sm font-medium text-zinc-800 transition hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                >
-                    {{ __('Batal') }}
-                </button>
-
                 <button
                     type="button"
                     x-on:click="setuju()"
                     x-bind:disabled="sibuk"
                     data-test="setuju-konfirmasi"
-                    class="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-wait disabled:opacity-80"
-                    :class="bahaya ? 'bg-red-600 hover:bg-red-500' : 'bg-indigo-600 hover:bg-indigo-500'"
+                    class="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition active:scale-[0.98] disabled:cursor-wait disabled:opacity-80"
+                    :class="bahaya
+                        ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-600 hover:text-white hover:ring-red-600 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/30 dark:hover:bg-red-600 dark:hover:text-white'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-500'"
                 >
                     <x-spinner x-show="sibuk" x-cloak class="size-4" />
                     <span x-text="tombol"></span>
+                </button>
+
+                <button
+                    type="button"
+                    x-ref="batal"
+                    x-on:click="tutup()"
+                    x-bind:disabled="sibuk"
+                    class="inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium transition disabled:opacity-50"
+                    :class="bahaya
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                        : 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600'"
+                >
+                    {{ __('Batal') }}
                 </button>
             </div>
         </div>
