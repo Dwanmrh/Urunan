@@ -131,7 +131,7 @@ new class extends Component {
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->menungguKonfirmasi as $pembayaran)
                             <li wire:key="menunggu-{{ $pembayaran->id }}">
-                                <a href="{{ route('tagihan.show', [$pembayaran->tagihan->grup_id, $pembayaran->tagihan_id]) }}" wire:navigate class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700">
+                                <a href="{{ route('tagihan.show', [$pembayaran->tagihan->grup_id, $pembayaran->tagihan_id]) }}" wire:navigate class="flex items-center justify-between gap-3 px-4 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0 hover:bg-zinc-50 dark:hover:bg-zinc-700">
                                     <div>
                                         <flux:heading>{{ $pembayaran->dari->nama }} mengirim bukti</flux:heading>
                                         <flux:text>{{ $pembayaran->tagihan->judul }}, {{ $pembayaran->tagihan->grup->nama }}</flux:text>
@@ -160,7 +160,7 @@ new class extends Component {
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->perluDibayar as $baris)
                             <li wire:key="bayar-{{ $baris['tagihan']->id }}">
-                                <a href="{{ route('tagihan.show', [$baris['tagihan']->grup_id, $baris['tagihan']->id]) }}" wire:navigate class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700">
+                                <a href="{{ route('tagihan.show', [$baris['tagihan']->grup_id, $baris['tagihan']->id]) }}" wire:navigate class="flex items-center justify-between gap-3 px-4 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0 hover:bg-zinc-50 dark:hover:bg-zinc-700">
                                     <div>
                                         <flux:heading>{{ $baris['tagihan']->judul }}</flux:heading>
                                         <flux:text>Ke {{ $baris['tagihan']->pembayar->nama }}, {{ $baris['tagihan']->grup->nama }}</flux:text>

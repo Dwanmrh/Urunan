@@ -128,7 +128,7 @@ new #[Title('Detail grup')] class extends Component {
 
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach ($this->anggotaDenganSaldo as $baris)
-                    <li wire:key="anggota-{{ $baris['anggota']->id }}" class="flex items-center justify-between gap-3 py-3">
+                    <li wire:key="anggota-{{ $baris['anggota']->id }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                         <div>
                             <flux:heading>{{ $baris['anggota']->nama }}</flux:heading>
                             <flux:text>{{ $baris['anggota']->user_id ? 'Punya akun' : 'Tanpa akun' }}</flux:text>
@@ -163,7 +163,7 @@ new #[Title('Detail grup')] class extends Component {
                 @else
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->rencanaPelunasan as $urutan => $pembayaran)
-                            <li wire:key="pelunasan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-3">
+                            <li wire:key="pelunasan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                                 <flux:text>{{ $pembayaran['dari'] }} membayar ke {{ $pembayaran['ke'] }}</flux:text>
                                 <x-rupiah :jumlah="$pembayaran['jumlah']" class="font-semibold" />
                             </li>
@@ -184,7 +184,7 @@ new #[Title('Detail grup')] class extends Component {
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->daftarTagihan as $tagihan)
                             <li wire:key="tagihan-{{ $tagihan->id }}">
-                                <a href="{{ route('tagihan.show', [$grup, $tagihan]) }}" wire:navigate class="flex items-center justify-between gap-3 py-3 hover:opacity-80">
+                                <a href="{{ route('tagihan.show', [$grup, $tagihan]) }}" wire:navigate class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0 hover:opacity-80">
                                     <div>
                                         <flux:heading>{{ $tagihan->judul }}</flux:heading>
                                         <flux:text>Dibayar dulu oleh {{ $tagihan->pembayar->nama }}, {{ $tagihan->tanggal->format('d/m/Y') }}</flux:text>

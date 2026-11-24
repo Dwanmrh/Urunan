@@ -30,6 +30,11 @@
                     >
                         Notifikasi
                     </flux:sidebar.item>
+                    @can('lihat-statistik')
+                        <flux:sidebar.item icon="chart-bar" :href="route('statistik.index')" :current="request()->routeIs('statistik.*')" wire:navigate>
+                            Statistik
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

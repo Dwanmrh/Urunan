@@ -385,7 +385,7 @@ new #[Title('Tagihan')] class extends Component {
             @else
                 <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @foreach ($this->perkiraanBagian as $urutan => $baris)
-                        <li wire:key="perkiraan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-2">
+                        <li wire:key="perkiraan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-2 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                             <flux:text>{{ $baris['nama'] }}</flux:text>
                             <x-rupiah :jumlah="$baris['jumlah']" class="font-semibold" />
                         </li>

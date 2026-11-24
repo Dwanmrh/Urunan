@@ -246,7 +246,7 @@ new #[Title('Detail tagihan')] class extends Component {
 
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach ($this->daftarItem as $item)
-                    <li wire:key="item-{{ $item->id }}" class="flex items-center justify-between gap-3 py-3">
+                    <li wire:key="item-{{ $item->id }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                         <div>
                             <flux:heading>{{ $item->nama }}</flux:heading>
                             <flux:text>{{ $item->anggota->isEmpty() ? 'Semua anggota' : $item->anggota->pluck('nama')->join(', ') }}</flux:text>
