@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Actions\Telegram\KirimPesanTelegram;
+use App\Actions\Urunan\FormatRupiah;
 use App\Models\Tagihan;
 use App\Notifications\Channels\TelegramChannel;
 use Illuminate\Bus\Queueable;
@@ -68,7 +69,7 @@ abstract class NotifikasiUrunan extends Notification implements ShouldQueue
      */
     public function toTelegram(object $notifiable): string
     {
-        return $this->judul()."\n\n".$this->pesan()."\n\nBuka: ".$this->urlTagihan(absolute: true);
+        return $this->judul()."\n\n".$this->pesan()."\n\n".__('Buka:').' '.$this->urlTagihan(absolute: true);
     }
 
     /**
@@ -86,7 +87,7 @@ abstract class NotifikasiUrunan extends Notification implements ShouldQueue
      */
     protected function rupiah(): string
     {
-        return 'Rp '.number_format($this->jumlah, 0, ',', '.');
+        return FormatRupiah::rp($this->jumlah);
     }
 
     /**

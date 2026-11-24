@@ -6,11 +6,15 @@ class TagihanBaru extends NotifikasiUrunan
 {
     protected function judul(): string
     {
-        return 'Tagihan baru';
+        return __('Tagihan baru');
     }
 
     protected function pesan(): string
     {
-        return "{$this->tagihan->pembayar->nama} mencatat {$this->tagihan->judul}. Bagianmu {$this->rupiah()}.";
+        return __(':nama mencatat :tagihan. Bagianmu :jumlah.', [
+            'nama' => $this->tagihan->pembayar->nama,
+            'tagihan' => $this->tagihan->judul,
+            'jumlah' => $this->rupiah(),
+        ]);
     }
 }

@@ -16,11 +16,15 @@ class BuktiBayarMasuk extends NotifikasiUrunan
 
     protected function judul(): string
     {
-        return 'Bukti bayar masuk';
+        return __('Bukti bayar masuk');
     }
 
     protected function pesan(): string
     {
-        return "{$this->namaPengirim} mengirim bukti {$this->rupiah()} untuk {$this->tagihan->judul}. Cek lalu konfirmasi.";
+        return __(':nama mengirim bukti :jumlah untuk :tagihan. Cek lalu konfirmasi.', [
+            'nama' => $this->namaPengirim,
+            'jumlah' => $this->rupiah(),
+            'tagihan' => $this->tagihan->judul,
+        ]);
     }
 }

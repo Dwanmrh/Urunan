@@ -18,6 +18,11 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+pest()->beforeEach(function () {
+    config(['app.locale' => 'id']);
+    app()->setLocale('id');
+})->in('Feature/Urunan');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

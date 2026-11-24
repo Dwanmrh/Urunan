@@ -45,14 +45,14 @@ class GoogleController extends Controller
         try {
             $akunGoogle = Socialite::driver('google')->user();
         } catch (Throwable) {
-            return $this->gagal('Masuk dengan Google dibatalkan atau gagal. Coba lagi.');
+            return $this->gagal(__('Masuk dengan Google dibatalkan atau gagal. Coba lagi.'));
         }
 
         $email = Str::lower((string) $akunGoogle->getEmail());
         $emailTerverifikasi = (bool) ($akunGoogle->user['email_verified'] ?? false);
 
         if ($email === '' || ! $emailTerverifikasi) {
-            return $this->gagal('Email akun Google ini belum terverifikasi. Pakai akun Google lain atau daftar dengan email.');
+            return $this->gagal(__('Email akun Google ini belum terverifikasi. Pakai akun Google lain atau daftar dengan email.'));
         }
 
         $user = User::where('google_id', $akunGoogle->getId())->first()

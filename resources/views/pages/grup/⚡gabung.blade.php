@@ -53,8 +53,8 @@ new #[Title('Gabung grup')] class extends Component {
         $this->validate(
             ['pilihan' => ['required', Rule::in(['baru', ...$this->anggotaTanpaAkun->pluck('id')->map(fn (int $id): string => (string) $id)])]],
             [
-                'pilihan.required' => 'Pilih salah satu.',
-                'pilihan.in' => 'Pilihan tidak valid. Mungkin nama itu sudah diakui orang lain, coba muat ulang halaman.',
+                'pilihan.required' => __('Pilih salah satu.'),
+                'pilihan.in' => __('Pilihan tidak valid. Mungkin nama itu sudah diakui orang lain, coba muat ulang halaman.'),
             ],
         );
 
@@ -75,23 +75,23 @@ new #[Title('Gabung grup')] class extends Component {
 }; ?>
 
 <section class="w-full max-w-lg">
-    <flux:heading size="xl" level="1">Gabung ke {{ $grup->nama }}</flux:heading>
-    <flux:subheading size="lg" class="mb-6">Diundang oleh {{ $grup->pembuat->name }}</flux:subheading>
+    <flux:heading size="xl" level="1">{{ __('Gabung ke :grup', ['grup' => $grup->nama]) }}</flux:heading>
+    <flux:subheading size="lg" class="mb-6">{{ __('Diundang oleh :nama', ['nama' => $grup->pembuat->name]) }}</flux:subheading>
 
     <form wire:submit="gabung" class="space-y-6">
-        <flux:radio.group wire:model="pilihan" label="Kamu yang mana?" variant="cards" class="flex-col">
-            <flux:radio value="baru" label="Saya anggota baru" description="Masuk sebagai {{ auth()->user()->name }}" />
+        <flux:radio.group wire:model="pilihan" label="{{ __('Kamu yang mana?') }}" variant="cards" class="flex-col">
+            <flux:radio value="baru" label="{{ __('Saya anggota baru') }}" description="{{ __('Masuk sebagai :nama', ['nama' => auth()->user()->name]) }}" />
 
             @foreach ($this->anggotaTanpaAkun as $anggota)
                 <flux:radio
                     value="{{ $anggota->id }}"
-                    label="Saya {{ $anggota->nama }}"
-                    description="Sudah dimasukkan ke grup, tagihannya ikut tersambung ke akunmu"
+                    label="{{ __('Saya :nama', ['nama' => $anggota->nama]) }}"
+                    description="{{ __('Sudah dimasukkan ke grup, tagihannya ikut tersambung ke akunmu') }}"
                     wire:key="anggota-{{ $anggota->id }}"
                 />
             @endforeach
         </flux:radio.group>
 
-        <flux:button variant="primary" type="submit" class="w-full" data-test="gabung-grup">Gabung</flux:button>
+        <flux:button variant="primary" type="submit" class="w-full" data-test="gabung-grup">{{ __('Gabung') }}</flux:button>
     </form>
 </section>

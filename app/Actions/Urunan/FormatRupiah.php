@@ -29,4 +29,14 @@ class FormatRupiah
     {
         return number_format($angka, 0, ',', '.');
     }
+
+    /**
+     * Ubah angka menjadi teks rupiah lengkap, misalnya 50000 menjadi "Rp 50.000".
+     *
+     * Tanda minus dibuang karena arah utang sudah dijelaskan di kalimatnya.
+     */
+    public static function rp(int $angka): string
+    {
+        return 'Rp '.self::keTeks(abs($angka));
+    }
 }

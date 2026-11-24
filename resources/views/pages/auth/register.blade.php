@@ -61,7 +61,7 @@
             </div>
         </form>
 
-        <x-tombol-google label="Daftar dengan Google" />
+        <x-tombol-google :label="__('Daftar dengan Google')" />
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
             <span>{{ __('Already have an account?') }}</span>

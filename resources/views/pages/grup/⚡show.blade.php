@@ -82,8 +82,8 @@ new #[Title('Detail grup')] class extends Component {
         $validated = $this->validate(
             ['namaAnggota' => ['required', 'string', 'max:60']],
             [
-                'namaAnggota.required' => 'Nama anggota wajib diisi.',
-                'namaAnggota.max' => 'Nama anggota maksimal 60 karakter.',
+                'namaAnggota.required' => __('Nama anggota wajib diisi.'),
+                'namaAnggota.max' => __('Nama anggota maksimal 60 karakter.'),
             ],
         );
 
@@ -93,7 +93,7 @@ new #[Title('Detail grup')] class extends Component {
 
         unset($this->anggotaDenganSaldo, $this->rencanaPelunasan);
 
-        Flux::toast(variant: 'success', text: 'Anggota ditambahkan.');
+        Flux::toast(variant: 'success', text: __('Anggota ditambahkan.'));
     }
 
     /**
@@ -107,15 +107,15 @@ new #[Title('Detail grup')] class extends Component {
 
 <section class="w-full">
     <div class="mb-6">
-        <flux:button :href="route('grup.index')" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">Semua grup</flux:button>
+        <flux:button :href="route('grup.index')" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">{{ __('Semua grup') }}</flux:button>
         <flux:heading size="xl" level="1">{{ $grup->nama }}</flux:heading>
-        <flux:subheading size="lg" class="mb-4">{{ $this->anggotaDenganSaldo->count() }} anggota</flux:subheading>
+        <flux:subheading size="lg" class="mb-4">{{ __(':jumlah anggota', ['jumlah' => $this->anggotaDenganSaldo->count()]) }}</flux:subheading>
 
         <div class="max-w-xl">
             <flux:input
                 :value="route('grup.gabung', $grup->kode_undangan)"
-                label="Link undangan"
-                description="Bagikan ke grup WhatsApp. Teman yang membuka link ini bisa daftar lalu bergabung."
+                label="{{ __('Link undangan') }}"
+                description="{{ __('Bagikan ke grup WhatsApp. Teman yang membuka link ini bisa daftar lalu bergabung.') }}"
                 readonly
                 copyable
             />
@@ -124,22 +124,22 @@ new #[Title('Detail grup')] class extends Component {
 
     <div class="grid gap-6 lg:grid-cols-2">
         <flux:card class="space-y-4">
-            <flux:heading size="lg" level="2">Anggota</flux:heading>
+            <flux:heading size="lg" level="2">{{ __('Anggota') }}</flux:heading>
 
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach ($this->anggotaDenganSaldo as $baris)
                     <li wire:key="anggota-{{ $baris['anggota']->id }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                         <div>
                             <flux:heading>{{ $baris['anggota']->nama }}</flux:heading>
-                            <flux:text>{{ $baris['anggota']->user_id ? 'Punya akun' : 'Tanpa akun' }}</flux:text>
+                            <flux:text>{{ $baris['anggota']->user_id ? __('Punya akun') : __('Tanpa akun') }}</flux:text>
                         </div>
 
                         @if ($baris['saldo'] < 0)
-                            <flux:badge color="red">Utang <x-rupiah :jumlah="$baris['saldo']" class="ms-1" /></flux:badge>
+                            <flux:badge color="red">{{ __('Utang :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
                         @elseif ($baris['saldo'] > 0)
-                            <flux:badge color="green">Menerima <x-rupiah :jumlah="$baris['saldo']" class="ms-1" /></flux:badge>
+                            <flux:badge color="green">{{ __('Menerima :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
                         @else
-                            <flux:badge color="zinc">Lunas</flux:badge>
+                            <flux:badge color="zinc">{{ __('Lunas') }}</flux:badge>
                         @endif
                     </li>
                 @endforeach
@@ -147,24 +147,24 @@ new #[Title('Detail grup')] class extends Component {
 
             <form wire:submit="tambahAnggota" class="flex items-end gap-3">
                 <div class="flex-1">
-                    <flux:input wire:model="namaAnggota" label="Tambah anggota" type="text" placeholder="Nama, misalnya Sinta" />
+                    <flux:input wire:model="namaAnggota" label="{{ __('Tambah anggota') }}" type="text" placeholder="{{ __('Nama, misalnya Sinta') }}" />
                 </div>
 
-                <flux:button variant="primary" type="submit" data-test="tambah-anggota">Tambah</flux:button>
+                <flux:button variant="primary" type="submit" data-test="tambah-anggota">{{ __('Tambah') }}</flux:button>
             </form>
         </flux:card>
 
         <div class="space-y-6">
             <flux:card class="space-y-4">
-                <flux:heading size="lg" level="2">Siapa bayar ke siapa</flux:heading>
+                <flux:heading size="lg" level="2">{{ __('Siapa bayar ke siapa') }}</flux:heading>
 
                 @if ($this->rencanaPelunasan === [])
-                    <flux:text>Tidak ada yang perlu dibayar.</flux:text>
+                    <flux:text>{{ __('Tidak ada yang perlu dibayar.') }}</flux:text>
                 @else
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->rencanaPelunasan as $urutan => $pembayaran)
                             <li wire:key="pelunasan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
-                                <flux:text>{{ $pembayaran['dari'] }} membayar ke {{ $pembayaran['ke'] }}</flux:text>
+                                <flux:text>{{ __(':dari membayar ke :ke', ['dari' => $pembayaran['dari'], 'ke' => $pembayaran['ke']]) }}</flux:text>
                                 <x-rupiah :jumlah="$pembayaran['jumlah']" class="font-semibold" />
                             </li>
                         @endforeach
@@ -174,12 +174,12 @@ new #[Title('Detail grup')] class extends Component {
 
             <flux:card class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <flux:heading size="lg" level="2">Tagihan</flux:heading>
-                    <flux:button :href="route('tagihan.create', $grup)" variant="primary" size="sm" icon="plus" wire:navigate data-test="tambah-tagihan">Tambah tagihan</flux:button>
+                    <flux:heading size="lg" level="2">{{ __('Tagihan') }}</flux:heading>
+                    <flux:button :href="route('tagihan.create', $grup)" variant="primary" size="sm" icon="plus" wire:navigate data-test="tambah-tagihan">{{ __('Tambah tagihan') }}</flux:button>
                 </div>
 
                 @if ($this->daftarTagihan->isEmpty())
-                    <flux:text>Belum ada tagihan di grup ini.</flux:text>
+                    <flux:text>{{ __('Belum ada tagihan di grup ini.') }}</flux:text>
                 @else
                     <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                         @foreach ($this->daftarTagihan as $tagihan)
@@ -187,7 +187,7 @@ new #[Title('Detail grup')] class extends Component {
                                 <a href="{{ route('tagihan.show', [$grup, $tagihan]) }}" wire:navigate class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0 hover:opacity-80">
                                     <div>
                                         <flux:heading>{{ $tagihan->judul }}</flux:heading>
-                                        <flux:text>Dibayar dulu oleh {{ $tagihan->pembayar->nama }}, {{ $tagihan->tanggal->format('d/m/Y') }}</flux:text>
+                                        <flux:text>{{ __('Dibayar dulu oleh :nama, :tanggal', ['nama' => $tagihan->pembayar->nama, 'tanggal' => $tagihan->tanggal->format('d/m/Y')]) }}</flux:text>
                                     </div>
                                     <x-rupiah :jumlah="$tagihan->total" class="font-semibold" />
                                 </a>

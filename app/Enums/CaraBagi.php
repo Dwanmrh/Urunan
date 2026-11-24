@@ -13,8 +13,8 @@ enum CaraBagi: string
     public function label(): string
     {
         return match ($this) {
-            self::Rata => 'Bagi rata',
-            self::PerItem => 'Per item',
+            self::Rata => __('Bagi rata'),
+            self::PerItem => __('Per item'),
         };
     }
 }

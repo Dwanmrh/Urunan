@@ -263,30 +263,30 @@ new #[Title('Tagihan')] class extends Component {
     private function pesanValidasi(): array
     {
         return [
-            'judul.required' => 'Judul tagihan wajib diisi.',
-            'judul.max' => 'Judul maksimal 100 karakter.',
-            'tanggal.required' => 'Tanggal wajib diisi.',
-            'tanggal.date' => 'Tanggal tidak valid.',
-            'dibayarOleh.required' => 'Pilih siapa yang membayar dulu.',
-            'dibayarOleh.in' => 'Pembayar harus anggota grup ini.',
-            'caraBagi.required' => 'Pilih cara membagi.',
-            'caraBagi.enum' => 'Cara membagi tidak valid.',
-            'total.required' => 'Total tagihan wajib diisi.',
-            'total.integer' => 'Total harus berupa angka.',
-            'total.min' => 'Total minimal Rp 1.',
-            'total.max' => 'Total terlalu besar.',
-            'peserta.required' => 'Pilih minimal satu orang yang ikut menanggung.',
-            'peserta.min' => 'Pilih minimal satu orang yang ikut menanggung.',
-            'peserta.*.in' => 'Ada peserta yang bukan anggota grup ini.',
-            'item.required' => 'Tambahkan minimal satu item.',
-            'item.min' => 'Tambahkan minimal satu item.',
-            'item.*.nama.required' => 'Nama item wajib diisi.',
-            'item.*.nama.max' => 'Nama item maksimal 100 karakter.',
-            'item.*.harga.required' => 'Harga wajib diisi.',
-            'item.*.harga.integer' => 'Harga harus berupa angka.',
-            'item.*.harga.min' => 'Harga minimal Rp 1.',
-            'item.*.harga.max' => 'Harga terlalu besar.',
-            'item.*.penanggung.*.in' => 'Ada penanggung yang bukan anggota grup ini.',
+            'judul.required' => __('Judul tagihan wajib diisi.'),
+            'judul.max' => __('Judul maksimal 100 karakter.'),
+            'tanggal.required' => __('Tanggal wajib diisi.'),
+            'tanggal.date' => __('Tanggal tidak valid.'),
+            'dibayarOleh.required' => __('Pilih siapa yang membayar dulu.'),
+            'dibayarOleh.in' => __('Pembayar harus anggota grup ini.'),
+            'caraBagi.required' => __('Pilih cara membagi.'),
+            'caraBagi.enum' => __('Cara membagi tidak valid.'),
+            'total.required' => __('Total tagihan wajib diisi.'),
+            'total.integer' => __('Total harus berupa angka.'),
+            'total.min' => __('Total minimal Rp 1.'),
+            'total.max' => __('Total terlalu besar.'),
+            'peserta.required' => __('Pilih minimal satu orang yang ikut menanggung.'),
+            'peserta.min' => __('Pilih minimal satu orang yang ikut menanggung.'),
+            'peserta.*.in' => __('Ada peserta yang bukan anggota grup ini.'),
+            'item.required' => __('Tambahkan minimal satu item.'),
+            'item.min' => __('Tambahkan minimal satu item.'),
+            'item.*.nama.required' => __('Nama item wajib diisi.'),
+            'item.*.nama.max' => __('Nama item maksimal 100 karakter.'),
+            'item.*.harga.required' => __('Harga wajib diisi.'),
+            'item.*.harga.integer' => __('Harga harus berupa angka.'),
+            'item.*.harga.min' => __('Harga minimal Rp 1.'),
+            'item.*.harga.max' => __('Harga terlalu besar.'),
+            'item.*.penanggung.*.in' => __('Ada penanggung yang bukan anggota grup ini.'),
         ];
     }
 }; ?>
@@ -296,27 +296,27 @@ new #[Title('Tagihan')] class extends Component {
         <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">
             {{ $tagihan ? $tagihan->judul : $grup->nama }}
         </flux:button>
-        <flux:heading size="xl" level="1">{{ $tagihan ? 'Edit tagihan' : 'Tambah tagihan' }}</flux:heading>
+        <flux:heading size="xl" level="1">{{ $tagihan ? __('Edit tagihan') : __('Tambah tagihan') }}</flux:heading>
     </div>
 
     @if ($tagihan)
-        <flux:callout icon="information-circle" class="mb-6" text="Pembayaran yang sudah diterima tetap tercatat. Bukti bayar yang masih menunggu konfirmasi akan dibatalkan dan perlu dikirim ulang." />
+        <flux:callout icon="information-circle" class="mb-6" text="{{ __('Pembayaran yang sudah diterima tetap tercatat. Bukti bayar yang masih menunggu konfirmasi akan dibatalkan dan perlu dikirim ulang.') }}" />
     @endif
 
     <form wire:submit="simpan" class="space-y-6">
-        <flux:input wire:model="judul" label="Judul" type="text" placeholder="Contoh: Makan malam ultah Sinta" required />
+        <flux:input wire:model="judul" label="{{ __('Judul') }}" type="text" placeholder="{{ __('Contoh: Makan malam ultah Sinta') }}" required />
 
         <div class="grid gap-4 sm:grid-cols-2">
-            <flux:input wire:model="tanggal" label="Tanggal" type="date" required />
+            <flux:input wire:model="tanggal" label="{{ __('Tanggal') }}" type="date" required />
 
-            <flux:select wire:model="dibayarOleh" label="Dibayar dulu oleh">
+            <flux:select wire:model="dibayarOleh" label="{{ __('Dibayar dulu oleh') }}">
                 @foreach ($this->anggota as $anggota)
                     <flux:select.option value="{{ $anggota->id }}" wire:key="pembayar-{{ $anggota->id }}">{{ $anggota->nama }}</flux:select.option>
                 @endforeach
             </flux:select>
         </div>
 
-        <flux:radio.group wire:model.live="caraBagi" label="Cara membagi" variant="segmented">
+        <flux:radio.group wire:model.live="caraBagi" label="{{ __('Cara membagi') }}" variant="segmented">
             @foreach (\App\Enums\CaraBagi::cases() as $cara)
                 <flux:radio value="{{ $cara->value }}" label="{{ $cara->label() }}" wire:key="cara-{{ $cara->value }}" />
             @endforeach
@@ -327,10 +327,10 @@ new #[Title('Tagihan')] class extends Component {
                 @foreach ($item as $urutan => $baris)
                     <flux:card wire:key="item-{{ $urutan }}" class="space-y-4">
                         <div class="grid gap-4 sm:grid-cols-[1fr_12rem]">
-                            <flux:input wire:model="item.{{ $urutan }}.nama" label="Nama item" type="text" placeholder="Contoh: Ayam bakar" />
+                            <flux:input wire:model="item.{{ $urutan }}.nama" label="{{ __('Nama item') }}" type="text" placeholder="{{ __('Contoh: Ayam bakar') }}" />
                             <flux:input
                                 wire:model.live.debounce.400ms="item.{{ $urutan }}.harga"
-                                label="Harga"
+                                label="{{ __('Harga') }}"
                                 type="text"
                                 inputmode="numeric"
                                 mask:dynamic="$money($input, ',', '.', 0)"
@@ -342,24 +342,24 @@ new #[Title('Tagihan')] class extends Component {
                             </flux:input>
                         </div>
 
-                        <flux:checkbox.group wire:model.live="item.{{ $urutan }}.penanggung" label="Ditanggung oleh" description="Kosongkan kalau ditanggung semua anggota." variant="pills">
+                        <flux:checkbox.group wire:model.live="item.{{ $urutan }}.penanggung" label="{{ __('Ditanggung oleh') }}" description="{{ __('Kosongkan kalau ditanggung semua anggota.') }}" variant="pills">
                             @foreach ($this->anggota as $anggota)
                                 <flux:checkbox value="{{ $anggota->id }}" label="{{ $anggota->nama }}" wire:key="item-{{ $urutan }}-anggota-{{ $anggota->id }}" />
                             @endforeach
                         </flux:checkbox.group>
 
                         @if (count($item) > 1)
-                            <flux:button wire:click="hapusItem({{ $urutan }})" variant="subtle" size="sm" icon="trash">Hapus item</flux:button>
+                            <flux:button wire:click="hapusItem({{ $urutan }})" variant="subtle" size="sm" icon="trash">{{ __('Hapus item') }}</flux:button>
                         @endif
                     </flux:card>
                 @endforeach
 
-                <flux:button wire:click="tambahItem" icon="plus" class="w-full">Tambah item</flux:button>
+                <flux:button wire:click="tambahItem" icon="plus" class="w-full">{{ __('Tambah item') }}</flux:button>
             </div>
         @else
             <flux:input
                 wire:model.live.debounce.400ms="total"
-                label="Total tagihan"
+                label="{{ __('Total tagihan') }}"
                 type="text"
                 inputmode="numeric"
                 mask:dynamic="$money($input, ',', '.', 0)"
@@ -370,7 +370,7 @@ new #[Title('Tagihan')] class extends Component {
                 </x-slot>
             </flux:input>
 
-            <flux:checkbox.group wire:model.live="peserta" label="Ditanggung oleh">
+            <flux:checkbox.group wire:model.live="peserta" label="{{ __('Ditanggung oleh') }}">
                 @foreach ($this->anggota as $anggota)
                     <flux:checkbox value="{{ $anggota->id }}" label="{{ $anggota->nama }}" wire:key="peserta-{{ $anggota->id }}" />
                 @endforeach
@@ -378,10 +378,10 @@ new #[Title('Tagihan')] class extends Component {
         @endif
 
         <flux:card class="space-y-3">
-            <flux:heading level="2">Perkiraan bagian tiap orang</flux:heading>
+            <flux:heading level="2">{{ __('Perkiraan bagian tiap orang') }}</flux:heading>
 
             @if ($this->perkiraanBagian === [])
-                <flux:text>Isi nominal untuk melihat bagian tiap orang.</flux:text>
+                <flux:text>{{ __('Isi nominal untuk melihat bagian tiap orang.') }}</flux:text>
             @else
                 <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @foreach ($this->perkiraanBagian as $urutan => $baris)
@@ -395,8 +395,8 @@ new #[Title('Tagihan')] class extends Component {
         </flux:card>
 
         <div class="flex justify-end gap-2">
-            <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="filled" wire:navigate>Batal</flux:button>
-            <flux:button variant="primary" type="submit" data-test="simpan-tagihan">{{ $tagihan ? 'Simpan perubahan' : 'Simpan tagihan' }}</flux:button>
+            <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="filled" wire:navigate>{{ __('Batal') }}</flux:button>
+            <flux:button variant="primary" type="submit" data-test="simpan-tagihan">{{ $tagihan ? __('Simpan perubahan') : __('Simpan tagihan') }}</flux:button>
         </div>
     </form>
 </section>

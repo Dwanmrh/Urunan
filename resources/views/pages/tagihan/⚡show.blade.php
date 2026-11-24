@@ -97,7 +97,7 @@ new #[Title('Detail tagihan')] class extends Component {
 
         $this->segarkan();
 
-        Flux::toast(variant: 'success', text: $anggota->nama.' ditandai lunas.');
+        Flux::toast(variant: 'success', text: __(':nama ditandai lunas.', ['nama' => $anggota->nama]));
     }
 
     /**
@@ -111,7 +111,7 @@ new #[Title('Detail tagihan')] class extends Component {
 
         $this->segarkan();
 
-        Flux::toast(variant: 'success', text: 'Pembayaran dikonfirmasi.');
+        Flux::toast(variant: 'success', text: __('Pembayaran dikonfirmasi.'));
     }
 
     /**
@@ -125,7 +125,7 @@ new #[Title('Detail tagihan')] class extends Component {
 
         $this->segarkan();
 
-        Flux::toast(text: 'Bukti bayar ditolak.');
+        Flux::toast(text: __('Bukti bayar ditolak.'));
     }
 
     /**
@@ -142,9 +142,9 @@ new #[Title('Detail tagihan')] class extends Component {
         $this->validate(
             ['bukti' => ['required', 'image', 'max:4096']],
             [
-                'bukti.required' => 'Pilih foto bukti transfer dulu.',
-                'bukti.image' => 'Bukti harus berupa gambar.',
-                'bukti.max' => 'Ukuran gambar maksimal 4 MB.',
+                'bukti.required' => __('Pilih foto bukti transfer dulu.'),
+                'bukti.image' => __('Bukti harus berupa gambar.'),
+                'bukti.max' => __('Ukuran gambar maksimal 4 MB.'),
             ],
         );
 
@@ -154,7 +154,7 @@ new #[Title('Detail tagihan')] class extends Component {
             \Illuminate\Support\Facades\Storage::disk('local')->delete($path);
             $this->reset('bukti');
 
-            Flux::toast(variant: 'warning', text: 'Bagianmu sudah lunas atau buktinya masih menunggu konfirmasi.');
+            Flux::toast(variant: 'warning', text: __('Bagianmu sudah lunas atau buktinya masih menunggu konfirmasi.'));
 
             return;
         }
@@ -163,7 +163,7 @@ new #[Title('Detail tagihan')] class extends Component {
         $this->segarkan();
 
         Flux::modal('kirim-bukti')->close();
-        Flux::toast(variant: 'success', text: 'Bukti terkirim. Menunggu konfirmasi '.$this->tagihan->pembayar->nama.'.');
+        Flux::toast(variant: 'success', text: __('Bukti terkirim. Menunggu konfirmasi :nama.', ['nama' => $this->tagihan->pembayar->nama]));
     }
 
     /**
@@ -213,22 +213,22 @@ new #[Title('Detail tagihan')] class extends Component {
             <div>
                 <flux:heading size="xl" level="1">{{ $tagihan->judul }}</flux:heading>
                 <flux:subheading size="lg">
-                    Dibayar dulu oleh {{ $tagihan->pembayar->nama }}, {{ $tagihan->tanggal->format('d/m/Y') }}, {{ $tagihan->cara_bagi->label() }}
+                    {{ __('Dibayar dulu oleh :nama, :tanggal, :cara', ['nama' => $tagihan->pembayar->nama, 'tanggal' => $tagihan->tanggal->format('d/m/Y'), 'cara' => $tagihan->cara_bagi->label()]) }}
                 </flux:subheading>
             </div>
 
             @if ($this->bisaMengelola)
                 <div class="flex gap-2">
-                    <flux:button :href="route('tagihan.edit', [$grup, $tagihan])" icon="pencil-square" size="sm" wire:navigate data-test="edit-tagihan">Edit</flux:button>
+                    <flux:button :href="route('tagihan.edit', [$grup, $tagihan])" icon="pencil-square" size="sm" wire:navigate data-test="edit-tagihan">{{ __('Edit') }}</flux:button>
                     <flux:button
                         wire:click="hapus"
-                        wire:confirm="Hapus tagihan ini? Pembayaran yang sudah diterima tetap tercatat di saldo grup."
+                        wire:confirm="{{ __('Hapus tagihan ini? Pembayaran yang sudah diterima tetap tercatat di saldo grup.') }}"
                         icon="trash"
                         size="sm"
                         variant="danger"
                         data-test="hapus-tagihan"
                     >
-                        Hapus
+                        {{ __('Hapus') }}
                     </flux:button>
                 </div>
             @endif
@@ -236,20 +236,20 @@ new #[Title('Detail tagihan')] class extends Component {
     </div>
 
     <flux:card class="mb-6">
-        <flux:text>Total tagihan</flux:text>
+        <flux:text>{{ __('Total tagihan') }}</flux:text>
         <x-rupiah :jumlah="$tagihan->total" class="text-2xl font-bold" />
     </flux:card>
 
     @if ($tagihan->cara_bagi === \App\Enums\CaraBagi::PerItem)
         <flux:card class="mb-6 space-y-3">
-            <flux:heading size="lg" level="2">Rincian item</flux:heading>
+            <flux:heading size="lg" level="2">{{ __('Rincian item') }}</flux:heading>
 
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @foreach ($this->daftarItem as $item)
                     <li wire:key="item-{{ $item->id }}" class="flex items-center justify-between gap-3 py-3 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
                         <div>
                             <flux:heading>{{ $item->nama }}</flux:heading>
-                            <flux:text>{{ $item->anggota->isEmpty() ? 'Semua anggota' : $item->anggota->pluck('nama')->join(', ') }}</flux:text>
+                            <flux:text>{{ $item->anggota->isEmpty() ? __('Semua anggota') : $item->anggota->pluck('nama')->join(', ') }}</flux:text>
                         </div>
                         <x-rupiah :jumlah="$item->harga" class="font-semibold" />
                     </li>
@@ -259,10 +259,10 @@ new #[Title('Detail tagihan')] class extends Component {
     @endif
 
     <flux:card class="space-y-3">
-        <flux:heading size="lg" level="2">Bagian tiap orang</flux:heading>
+        <flux:heading size="lg" level="2">{{ __('Bagian tiap orang') }}</flux:heading>
 
         @unless ($this->bisaMengelola)
-            <flux:text>Hanya {{ $tagihan->pembayar->nama }} yang bisa menandai lunas dan mengonfirmasi bukti bayar.</flux:text>
+            <flux:text>{{ __('Hanya :nama yang bisa menandai lunas dan mengonfirmasi bukti bayar.', ['nama' => $tagihan->pembayar->nama]) }}</flux:text>
         @endunless
 
         <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -274,15 +274,15 @@ new #[Title('Detail tagihan')] class extends Component {
                         <flux:heading>{{ $baris['anggota']->nama }}</flux:heading>
                         <flux:text>
                             @if ($baris['pembayar'])
-                                Yang membayar dulu
+                                {{ __('Yang membayar dulu') }}
                             @elseif ($menunggu)
-                                Bukti terkirim, menunggu konfirmasi
+                                {{ __('Bukti terkirim, menunggu konfirmasi') }}
                             @elseif ($baris['sisa'] > 0 && $baris['dibayar'] > 0)
-                                Sisa <x-rupiah :jumlah="$baris['sisa']" />
+                                {{ __('Sisa :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['sisa'])]) }}
                             @elseif ($baris['sisa'] > 0)
-                                Belum membayar
+                                {{ __('Belum membayar') }}
                             @else
-                                Sudah membayar
+                                {{ __('Sudah membayar') }}
                             @endif
                         </flux:text>
                     </div>
@@ -291,39 +291,39 @@ new #[Title('Detail tagihan')] class extends Component {
                         <x-rupiah :jumlah="$baris['bagian']" class="me-1 font-semibold" />
 
                         @if ($baris['sisa'] === 0)
-                            <flux:badge color="green">Lunas</flux:badge>
+                            <flux:badge color="green">{{ __('Lunas') }}</flux:badge>
                         @elseif ($menunggu)
-                            <flux:badge color="sky">Menunggu</flux:badge>
+                            <flux:badge color="sky">{{ __('Menunggu') }}</flux:badge>
                         @else
-                            <flux:badge color="amber">Belum</flux:badge>
+                            <flux:badge color="amber">{{ __('Belum') }}</flux:badge>
                         @endif
 
                         @if ($this->bisaMengelola && ! $baris['pembayar'] && $baris['sisa'] > 0)
                             @if ($menunggu)
-                                <flux:button :href="route('pembayaran.bukti', [$grup, $menunggu])" target="_blank" size="sm" variant="ghost" icon="photo">Lihat bukti</flux:button>
-                                <flux:button wire:click="konfirmasi({{ $menunggu->id }})" size="sm" variant="primary" data-test="konfirmasi-{{ $menunggu->id }}">Konfirmasi</flux:button>
+                                <flux:button :href="route('pembayaran.bukti', [$grup, $menunggu])" target="_blank" size="sm" variant="ghost" icon="photo">{{ __('Lihat bukti') }}</flux:button>
+                                <flux:button wire:click="konfirmasi({{ $menunggu->id }})" size="sm" variant="primary" data-test="konfirmasi-{{ $menunggu->id }}">{{ __('Konfirmasi') }}</flux:button>
                                 <flux:button
                                     wire:click="tolak({{ $menunggu->id }})"
-                                    wire:confirm="Tolak bukti dari {{ $baris['anggota']->nama }}? Buktinya akan dihapus dan perlu dikirim ulang."
+                                    wire:confirm="{{ __('Tolak bukti dari :nama? Buktinya akan dihapus dan perlu dikirim ulang.', ['nama' => $baris['anggota']->nama]) }}"
                                     size="sm"
                                     variant="danger"
                                 >
-                                    Tolak
+                                    {{ __('Tolak') }}
                                 </flux:button>
                             @else
                                 <flux:button
                                     wire:click="tandaiLunas({{ $baris['anggota']->id }})"
-                                    wire:confirm="Tandai {{ $baris['anggota']->nama }} sudah membayar langsung, misalnya tunai?"
+                                    wire:confirm="{{ __('Tandai :nama sudah membayar langsung, misalnya tunai?', ['nama' => $baris['anggota']->nama]) }}"
                                     size="sm"
                                     variant="primary"
                                     data-test="tandai-lunas-{{ $baris['anggota']->id }}"
                                 >
-                                    Tandai lunas
+                                    {{ __('Tandai lunas') }}
                                 </flux:button>
                             @endif
                         @elseif ($this->anggotaSaya?->id === $baris['anggota']->id && ! $baris['pembayar'] && $baris['sisa'] > 0 && ! $menunggu)
                             <flux:modal.trigger name="kirim-bukti">
-                                <flux:button size="sm" variant="primary" icon="arrow-up-tray" data-test="buka-kirim-bukti">Kirim bukti bayar</flux:button>
+                                <flux:button size="sm" variant="primary" icon="arrow-up-tray" data-test="buka-kirim-bukti">{{ __('Kirim bukti bayar') }}</flux:button>
                             </flux:modal.trigger>
                         @endif
                     </div>
@@ -335,29 +335,28 @@ new #[Title('Detail tagihan')] class extends Component {
     <flux:modal name="kirim-bukti" focusable class="max-w-lg">
         <form wire:submit="kirimBukti" class="space-y-6">
             <div>
-                <flux:heading size="lg">Kirim bukti bayar</flux:heading>
+                <flux:heading size="lg">{{ __('Kirim bukti bayar') }}</flux:heading>
                 <flux:subheading>
-                    Transfer <x-rupiah :jumlah="$this->sisaSaya" class="font-semibold" /> ke {{ $tagihan->pembayar->nama }}, lalu unggah foto atau screenshot buktinya.
-                    Statusmu jadi lunas setelah {{ $tagihan->pembayar->nama }} mengonfirmasi.
+                    {{ __('Transfer :jumlah ke :nama, lalu unggah foto atau screenshot buktinya. Statusmu jadi lunas setelah :nama mengonfirmasi.', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($this->sisaSaya), 'nama' => $tagihan->pembayar->nama]) }}
                 </flux:subheading>
             </div>
 
-            <flux:input type="file" wire:model="bukti" label="Foto bukti transfer" accept="image/*" />
+            <flux:input type="file" wire:model="bukti" label="{{ __('Foto bukti transfer') }}" accept="image/*" />
 
             <div wire:loading wire:target="bukti">
-                <flux:text>Mengunggah...</flux:text>
+                <flux:text>{{ __('Mengunggah...') }}</flux:text>
             </div>
 
             @if ($bukti && str_starts_with((string) $bukti->getMimeType(), 'image/'))
-                <img src="{{ $bukti->temporaryUrl() }}" alt="Pratinjau bukti transfer" class="max-h-64 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <img src="{{ $bukti->temporaryUrl() }}" alt="{{ __('Pratinjau bukti transfer') }}" class="max-h-64 rounded-lg border border-zinc-200 dark:border-zinc-700">
             @endif
 
             <div class="flex justify-end space-x-2 rtl:space-x-reverse">
                 <flux:modal.close>
-                    <flux:button variant="filled">Batal</flux:button>
+                    <flux:button variant="filled">{{ __('Batal') }}</flux:button>
                 </flux:modal.close>
 
-                <flux:button variant="primary" type="submit" data-test="kirim-bukti">Kirim</flux:button>
+                <flux:button variant="primary" type="submit" data-test="kirim-bukti">{{ __('Kirim') }}</flux:button>
             </div>
         </form>
     </flux:modal>

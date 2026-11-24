@@ -18,7 +18,7 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="user-group" :href="route('grup.index')" :current="request()->routeIs('grup.*')" wire:navigate>
-                        Grup patungan
+                        {{ __('Grup patungan') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item
                         icon="bell"
@@ -28,17 +28,19 @@
                         badge:color="sky"
                         wire:navigate
                     >
-                        Notifikasi
+                        {{ __('Notifikasi') }}
                     </flux:sidebar.item>
                     @can('lihat-statistik')
                         <flux:sidebar.item icon="chart-bar" :href="route('statistik.index')" :current="request()->routeIs('statistik.*')" wire:navigate>
-                            Statistik
+                            {{ __('Statistik') }}
                         </flux:sidebar.item>
                     @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            <x-pilih-bahasa class="px-1" />
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
@@ -49,7 +51,7 @@
 
             <flux:spacer />
 
-            <a href="{{ route('notifikasi.index') }}" wire:navigate class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="Notifikasi{{ $jumlahNotifikasiBaru ? ', '.$jumlahNotifikasiBaru.' belum dibaca' : '' }}">
+            <a href="{{ route('notifikasi.index') }}" wire:navigate class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ $jumlahNotifikasiBaru ? __('Notifikasi, :jumlah belum dibaca', ['jumlah' => $jumlahNotifikasiBaru]) : __('Notifikasi') }}">
                 <flux:icon.bell class="size-5" />
                 @if ($jumlahNotifikasiBaru)
                     <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-semibold text-white">{{ $jumlahNotifikasiBaru > 9 ? '9+' : $jumlahNotifikasiBaru }}</span>

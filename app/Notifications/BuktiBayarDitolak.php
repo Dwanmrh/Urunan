@@ -6,11 +6,15 @@ class BuktiBayarDitolak extends NotifikasiUrunan
 {
     protected function judul(): string
     {
-        return 'Bukti bayar ditolak';
+        return __('Bukti bayar ditolak');
     }
 
     protected function pesan(): string
     {
-        return "{$this->tagihan->pembayar->nama} menolak bukti {$this->rupiah()} untuk {$this->tagihan->judul}. Cek lagi lalu kirim ulang.";
+        return __(':nama menolak bukti :jumlah untuk :tagihan. Cek lagi lalu kirim ulang.', [
+            'nama' => $this->tagihan->pembayar->nama,
+            'jumlah' => $this->rupiah(),
+            'tagihan' => $this->tagihan->judul,
+        ]);
     }
 }

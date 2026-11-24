@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BuktiPembayaranController;
+use App\Http\Controllers\GantiBahasaController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('bahasa/{bahasa}', GantiBahasaController::class)->name('bahasa.ganti');
 
 Route::middleware('guest')->group(function () {
     Route::get('auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');

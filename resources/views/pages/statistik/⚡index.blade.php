@@ -89,47 +89,47 @@ new #[Title('Statistik')] class extends Component {
 
 <section class="w-full space-y-8" wire:poll.10s>
     <div>
-        <flux:heading size="xl" level="1">Statistik Urunan</flux:heading>
-        <flux:subheading size="lg">Diperbarui otomatis tiap 10 detik. Hanya admin yang bisa melihat halaman ini.</flux:subheading>
+        <flux:heading size="xl" level="1">{{ __('Statistik Urunan') }}</flux:heading>
+        <flux:subheading size="lg">{{ __('Diperbarui otomatis tiap 10 detik. Hanya admin yang bisa melihat halaman ini.') }}</flux:subheading>
     </div>
 
     <section class="space-y-3">
-        <flux:heading size="lg" level="2">Sedang online</flux:heading>
+        <flux:heading size="lg" level="2">{{ __('Sedang online') }}</flux:heading>
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:card>
-                <flux:text>Pengunjung (5 menit terakhir)</flux:text>
+                <flux:text>{{ __('Pengunjung (5 menit terakhir)') }}</flux:text>
                 <div class="text-3xl font-bold">{{ $this->online['pengunjung'] }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Pengguna yang login</flux:text>
+                <flux:text>{{ __('Pengguna yang login') }}</flux:text>
                 <div class="text-3xl font-bold">{{ $this->online['pengguna'] }}</div>
             </flux:card>
         </div>
     </section>
 
     <section class="space-y-3">
-        <flux:heading size="lg" level="2">Hari ini</flux:heading>
+        <flux:heading size="lg" level="2">{{ __('Hari ini') }}</flux:heading>
         <div class="grid gap-4 sm:grid-cols-3">
             <flux:card>
-                <flux:text>Pengunjung unik</flux:text>
+                <flux:text>{{ __('Pengunjung unik') }}</flux:text>
                 <div class="text-3xl font-bold">{{ $this->hariIni['pengunjung'] }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Pengguna aktif</flux:text>
+                <flux:text>{{ __('Pengguna aktif') }}</flux:text>
                 <div class="text-3xl font-bold">{{ $this->hariIni['penggunaAktif'] }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Pendaftar baru</flux:text>
+                <flux:text>{{ __('Pendaftar baru') }}</flux:text>
                 <div class="text-3xl font-bold">{{ $this->hariIni['pendaftarBaru'] }}</div>
             </flux:card>
         </div>
     </section>
 
     <section class="space-y-3">
-        <flux:heading size="lg" level="2">Pengunjung unik 14 hari terakhir</flux:heading>
+        <flux:heading size="lg" level="2">{{ __('Pengunjung unik 14 hari terakhir') }}</flux:heading>
         @php($tertinggi = max(1, max(array_column($this->grafik, 'jumlah'))))
         <flux:card>
-            <div role="img" aria-label="Grafik pengunjung unik per hari selama 14 hari terakhir" class="flex h-48 items-end gap-1 sm:gap-2">
+            <div role="img" aria-label="{{ __('Grafik pengunjung unik per hari selama 14 hari terakhir') }}" class="flex h-48 items-end gap-1 sm:gap-2">
                 @foreach ($this->grafik as $hari)
                     <div class="flex h-full flex-1 flex-col items-center justify-end gap-1" wire:key="grafik-{{ $hari['label'] }}">
                         <span class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">{{ $hari['jumlah'] ?: '' }}</span>
@@ -142,26 +142,26 @@ new #[Title('Statistik')] class extends Component {
     </section>
 
     <section class="space-y-3">
-        <flux:heading size="lg" level="2">Sejak awal</flux:heading>
+        <flux:heading size="lg" level="2">{{ __('Sejak awal') }}</flux:heading>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <flux:card>
-                <flux:text>Pengguna terdaftar</flux:text>
+                <flux:text>{{ __('Pengguna terdaftar') }}</flux:text>
                 <div class="text-2xl font-bold">{{ number_format($this->total['pengguna'], 0, ',', '.') }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Grup patungan</flux:text>
+                <flux:text>{{ __('Grup patungan') }}</flux:text>
                 <div class="text-2xl font-bold">{{ number_format($this->total['grup'], 0, ',', '.') }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Tagihan dicatat</flux:text>
+                <flux:text>{{ __('Tagihan dicatat') }}</flux:text>
                 <div class="text-2xl font-bold">{{ number_format($this->total['tagihan'], 0, ',', '.') }}</div>
             </flux:card>
             <flux:card>
-                <flux:text>Nilai tagihan dicatat</flux:text>
+                <flux:text>{{ __('Nilai tagihan dicatat') }}</flux:text>
                 <x-rupiah :jumlah="$this->total['nilaiTagihan']" class="text-2xl font-bold" />
             </flux:card>
             <flux:card>
-                <flux:text>Pembayaran yang sudah lunas</flux:text>
+                <flux:text>{{ __('Pembayaran yang sudah lunas') }}</flux:text>
                 <x-rupiah :jumlah="$this->total['sudahDibayar']" class="text-2xl font-bold" />
             </flux:card>
         </div>

@@ -51,16 +51,16 @@ new #[Title('Notifikasi')] class extends Component {
 
 <section class="w-full max-w-2xl" wire:poll.30s>
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <flux:heading size="xl" level="1">Notifikasi</flux:heading>
+        <flux:heading size="xl" level="1">{{ __('Notifikasi') }}</flux:heading>
 
         @if ($this->daftar->contains(fn ($notifikasi) => $notifikasi->read_at === null))
-            <flux:button wire:click="tandaiSemuaDibaca" size="sm" icon="check" data-test="tandai-semua-dibaca">Tandai semua dibaca</flux:button>
+            <flux:button wire:click="tandaiSemuaDibaca" size="sm" icon="check" data-test="tandai-semua-dibaca">{{ __('Tandai semua dibaca') }}</flux:button>
         @endif
     </div>
 
     @if ($this->daftar->isEmpty())
         <flux:card>
-            <flux:text>Belum ada notifikasi. Kabar soal tagihan dan bukti bayar akan muncul di sini.</flux:text>
+            <flux:text>{{ __('Belum ada notifikasi. Kabar soal tagihan dan bukti bayar akan muncul di sini.') }}</flux:text>
         </flux:card>
     @else
         <flux:card class="p-0">
@@ -79,13 +79,13 @@ new #[Title('Notifikasi')] class extends Component {
                             ])></span>
 
                             <span class="flex-1">
-                                <flux:heading @class(['font-semibold' => $notifikasi->read_at === null])>{{ $notifikasi->data['judul'] ?? 'Notifikasi' }}</flux:heading>
+                                <flux:heading @class(['font-semibold' => $notifikasi->read_at === null])>{{ $notifikasi->data['judul'] ?? __('Notifikasi') }}</flux:heading>
                                 <flux:text>{{ $notifikasi->data['pesan'] ?? '' }}</flux:text>
-                                <flux:text size="sm" class="mt-1">{{ $notifikasi->created_at->locale('id')->diffForHumans() }}</flux:text>
+                                <flux:text size="sm" class="mt-1">{{ $notifikasi->created_at->locale(app()->getLocale())->diffForHumans() }}</flux:text>
                             </span>
 
                             @if ($notifikasi->read_at === null)
-                                <span class="sr-only">Belum dibaca</span>
+                                <span class="sr-only">{{ __('Belum dibaca') }}</span>
                             @endif
                         </button>
                     </li>
