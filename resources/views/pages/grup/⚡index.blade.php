@@ -65,6 +65,12 @@ new #[Title('Grup patungan')] class extends Component {
 }; ?>
 
 <section class="w-full">
+    <x-tur nama="grup" :langkah="[
+        ['elemen' => '[data-tur=buat-grup]', 'judul' => __('Buat grup'), 'isi' => __('Satu grup untuk satu acara atau lingkaran teman, misalnya liburan atau kos. Kamu otomatis jadi pengelolanya.'), 'sisi' => 'left'],
+        ['elemen' => '[data-tur=ringkasan-grup]', 'judul' => __('Ringkasan semua grup'), 'isi' => __('Total yang harus kamu bayar dan yang akan kamu terima dari semua grup.')],
+        ['judul' => __('Langkah berikutnya'), 'isi' => __('Buka salah satu grup untuk menambah anggota, membagikan link undangan, dan mencatat tagihan.')],
+    ]" />
+
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
             <flux:heading size="xl" level="1">{{ __('Grup patungan') }}</flux:heading>
@@ -72,11 +78,11 @@ new #[Title('Grup patungan')] class extends Component {
         </div>
 
         <flux:modal.trigger name="buat-grup">
-            <flux:button variant="primary" icon="plus" data-test="buka-buat-grup">{{ __('Buat grup baru') }}</flux:button>
+            <flux:button variant="primary" icon="plus" data-test="buka-buat-grup" data-tur="buat-grup">{{ __('Buat grup baru') }}</flux:button>
         </flux:modal.trigger>
     </div>
 
-    <div class="mb-8 grid gap-4 sm:grid-cols-2">
+    <div class="mb-8 grid gap-4 sm:grid-cols-2" data-tur="ringkasan-grup">
         <flux:card>
             <flux:text>{{ __('Harus kamu bayar') }}</flux:text>
             <x-rupiah :jumlah="$this->ringkasan['harusBayar']" class="text-2xl font-bold text-red-600 dark:text-red-400" />

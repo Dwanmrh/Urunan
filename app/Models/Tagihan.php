@@ -168,10 +168,20 @@ class Tagihan extends Model
     }
 
     /**
-     * Apakah user boleh mengubah, menghapus, dan mengonfirmasi pembayaran tagihan ini.
+     * Apakah user ini boleh mengedit atau menghapus tagihan.
      *
-     * Yang berhak adalah pembayar tagihan. Kalau pembayar tidak punya akun,
-     * hak ini dipegang pembuat grup.
+     * Pembayar dan pembuat grup boleh, supaya tagihan yang salah catat tetap bisa dirapikan.
+     */
+    public function bisaDiubahOleh(User $user): bool
+    {
+        return $this->bisaDikelolaOleh($user) || $this->grup->dibuat_oleh === $user->id;
+    }
+
+    /**
+     * Apakah user ini boleh menandai lunas dan mengonfirmasi bukti bayar.
+     *
+     * Hanya yang menerima uangnya, yaitu pembayar. Kalau pembayar belum punya akun,
+     * pembuat grup yang mewakilinya.
      */
     public function bisaDikelolaOleh(User $user): bool
     {

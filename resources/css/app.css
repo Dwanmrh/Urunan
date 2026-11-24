@@ -26,6 +26,22 @@
     --color-accent: var(--color-indigo-600);
     --color-accent-content: var(--color-indigo-600);
     --color-accent-foreground: var(--color-white);
+
+    --animate-susut: susut 5s linear forwards;
+
+    @keyframes susut {
+        from {
+            transform: scaleX(1);
+        }
+
+        to {
+            transform: scaleX(0);
+        }
+    }
+}
+
+[x-cloak] {
+    display: none !important;
 }
 
 @layer theme {
@@ -64,3 +80,48 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Panduan aplikasi (driver.js) disesuaikan dengan tampilan Urunan */
+.driver-popover.tur-urunan {
+    @apply max-w-xs rounded-2xl bg-white p-5 font-sans text-zinc-700 shadow-2xl ring-1 ring-zinc-900/10 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-white/10;
+}
+
+.tur-urunan .driver-popover-title {
+    @apply pe-6 text-base font-semibold text-zinc-900 dark:text-white;
+}
+
+.tur-urunan .driver-popover-description {
+    @apply text-sm leading-relaxed;
+}
+
+.tur-urunan .driver-popover-close-btn {
+    @apply text-zinc-400 hover:text-zinc-700 dark:hover:text-white;
+}
+
+.tur-urunan .driver-popover-progress-text {
+    @apply text-xs text-zinc-500 dark:text-zinc-400;
+}
+
+.tur-urunan .driver-popover-footer button {
+    @apply rounded-lg border-0 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-none [text-shadow:none] hover:bg-zinc-200 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600;
+}
+
+.tur-urunan .driver-popover-footer button.driver-popover-next-btn {
+    @apply bg-indigo-600 text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400;
+}
+
+.tur-urunan .driver-popover-arrow-side-bottom {
+    @apply border-b-white dark:border-b-zinc-800;
+}
+
+.tur-urunan .driver-popover-arrow-side-top {
+    @apply border-t-white dark:border-t-zinc-800;
+}
+
+.tur-urunan .driver-popover-arrow-side-left {
+    @apply border-l-white dark:border-l-zinc-800;
+}
+
+.tur-urunan .driver-popover-arrow-side-right {
+    @apply border-r-white dark:border-r-zinc-800;
+}

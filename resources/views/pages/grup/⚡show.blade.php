@@ -16,30 +16,47 @@ new #[Title('Detail grup')] class extends Component {
 
     public string $namaAnggota = '';
 
+    public string $namaGrup = '';
+
+    public ?int $idAnggotaDiubah = null;
+
+    public string $namaAnggotaBaru = '';
+
     /**
      * Mount the component.
      */
     public function mount(Grup $grup): void
     {
         $this->grup = $grup;
+        $this->namaGrup = $grup->nama;
 
         $this->pastikanAnggota();
     }
 
     /**
+     * Apakah user yang sedang login adalah pembuat grup ini.
+     */
+    #[Computed]
+    public function bisaMengelola(): bool
+    {
+        return $this->grup->bisaDikelolaOleh(Auth::user());
+    }
+
+    /**
      * Anggota grup beserta saldonya.
      *
-     * @return Collection<int, array{anggota: AnggotaGrup, saldo: int}>
+     * @return Collection<int, array{anggota: AnggotaGrup, saldo: int, bisaDihapus: bool}>
      */
     #[Computed]
     public function anggotaDenganSaldo(): Collection
     {
         $saldo = $this->grup->saldo();
 
-        return $this->grup->anggota()->orderBy('id')->get()
+        return $this->grup->anggota()->with('grup')->orderBy('id')->get()
             ->map(fn (AnggotaGrup $anggota): array => [
                 'anggota' => $anggota,
                 'saldo' => $saldo[$anggota->id] ?? 0,
+                'bisaDihapus' => $this->bisaMengelola && $anggota->bisaDihapus(),
             ]);
     }
 
@@ -97,6 +114,127 @@ new #[Title('Detail grup')] class extends Component {
     }
 
     /**
+     * Ganti nama grup.
+     */
+    public function ubahNamaGrup(): void
+    {
+        $this->pastikanPengelola();
+
+        $validated = $this->validate(
+            ['namaGrup' => ['required', 'string', 'max:100']],
+            [
+                'namaGrup.required' => __('Nama grup wajib diisi.'),
+                'namaGrup.max' => __('Nama grup maksimal 100 karakter.'),
+            ],
+        );
+
+        $this->grup->update(['nama' => $validated['namaGrup']]);
+
+        Flux::modal('ubah-grup')->close();
+        Flux::toast(variant: 'success', text: __('Nama grup diperbarui.'));
+    }
+
+    /**
+     * Hapus grup beserta semua isinya, lalu kembali ke daftar grup.
+     */
+    public function hapusGrup(): void
+    {
+        $this->pastikanPengelola();
+
+        $this->grup->hapusSemua();
+
+        Flux::toast(variant: 'success', text: __('Grup dihapus.'));
+
+        $this->redirectRoute('grup.index', navigate: true);
+    }
+
+    /**
+     * Buka form ganti nama untuk anggota tanpa akun.
+     */
+    public function ubahAnggota(int $id): void
+    {
+        $this->pastikanPengelola();
+
+        $anggota = $this->anggotaTanpaAkun($id);
+
+        $this->idAnggotaDiubah = $anggota->id;
+        $this->namaAnggotaBaru = $anggota->nama;
+        $this->resetValidation();
+
+        Flux::modal('ubah-anggota')->show();
+    }
+
+    /**
+     * Simpan nama baru anggota tanpa akun.
+     */
+    public function simpanAnggota(): void
+    {
+        $this->pastikanPengelola();
+
+        $anggota = $this->anggotaTanpaAkun((int) $this->idAnggotaDiubah);
+
+        $validated = $this->validate(
+            ['namaAnggotaBaru' => ['required', 'string', 'max:60']],
+            [
+                'namaAnggotaBaru.required' => __('Nama anggota wajib diisi.'),
+                'namaAnggotaBaru.max' => __('Nama anggota maksimal 60 karakter.'),
+            ],
+        );
+
+        $anggota->update(['nama' => $validated['namaAnggotaBaru']]);
+
+        $this->reset('idAnggotaDiubah', 'namaAnggotaBaru');
+        unset($this->anggotaDenganSaldo, $this->rencanaPelunasan, $this->daftarTagihan);
+
+        Flux::modal('ubah-anggota')->close();
+        Flux::toast(variant: 'success', text: __('Nama anggota diperbarui.'));
+    }
+
+    /**
+     * Keluarkan anggota yang belum tercatat di tagihan mana pun.
+     */
+    public function hapusAnggota(int $id): void
+    {
+        $this->pastikanPengelola();
+
+        $anggota = $this->grup->anggota()->findOrFail($id);
+
+        if (! $anggota->bisaDihapus()) {
+            Flux::toast(variant: 'warning', text: __(':nama sudah tercatat di tagihan, jadi tidak bisa dikeluarkan.', ['nama' => $anggota->nama]));
+
+            return;
+        }
+
+        $anggota->delete();
+
+        unset($this->anggotaDenganSaldo, $this->rencanaPelunasan);
+
+        Flux::toast(variant: 'success', text: __(':nama dikeluarkan dari grup.', ['nama' => $anggota->nama]));
+    }
+
+    /**
+     * Ambil anggota tanpa akun di grup ini. Nama anggota yang punya akun mengikuti akunnya.
+     */
+    private function anggotaTanpaAkun(int $id): AnggotaGrup
+    {
+        $anggota = $this->grup->anggota()->findOrFail($id);
+
+        abort_if($anggota->user_id !== null, 403);
+
+        return $anggota;
+    }
+
+    /**
+     * Tolak akses kalau user bukan pembuat grup ini.
+     */
+    private function pastikanPengelola(): void
+    {
+        $this->pastikanAnggota();
+
+        abort_unless($this->grup->bisaDikelolaOleh(Auth::user()), 403);
+    }
+
+    /**
      * Tolak akses kalau user bukan anggota grup ini.
      */
     private function pastikanAnggota(): void
@@ -106,12 +244,47 @@ new #[Title('Detail grup')] class extends Component {
 }; ?>
 
 <section class="w-full">
+    <x-tur nama="detail-grup" :langkah="[
+        ['elemen' => '[data-tur=link-undangan]', 'judul' => __('Ajak teman'), 'isi' => __('Salin link ini lalu kirim ke grup WhatsApp. Teman yang membukanya bisa daftar dan langsung bergabung.')],
+        ['elemen' => '[data-tur=tambah-anggota]', 'judul' => __('Anggota tanpa akun'), 'isi' => __('Teman yang belum mau daftar tetap bisa dicatat. Kalau nanti dia bergabung lewat link, tagihannya ikut tersambung.')],
+        ['elemen' => '[data-tur=tambah-tagihan]', 'judul' => __('Catat tagihan'), 'isi' => __('Siapa yang membayar dulu mencatat tagihannya di sini, lalu Urunan membagi ke tiap anggota.'), 'sisi' => 'left'],
+        ['elemen' => '[data-tur=rencana-pelunasan]', 'judul' => __('Siapa bayar ke siapa'), 'isi' => __('Urunan meringkas utang semua anggota jadi transfer sesedikit mungkin.')],
+        ['elemen' => '[data-tur=kelola-grup]', 'judul' => __('Kelola grup'), 'isi' => __('Sebagai pembuat grup, kamu bisa mengganti nama atau menghapus grup dari menu ini.'), 'sisi' => 'left'],
+    ]" />
+
     <div class="mb-6">
         <flux:button :href="route('grup.index')" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">{{ __('Semua grup') }}</flux:button>
-        <flux:heading size="xl" level="1">{{ $grup->nama }}</flux:heading>
-        <flux:subheading size="lg" class="mb-4">{{ __(':jumlah anggota', ['jumlah' => $this->anggotaDenganSaldo->count()]) }}</flux:subheading>
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <flux:heading size="xl" level="1" class="break-words">{{ $grup->nama }}</flux:heading>
+                <flux:subheading size="lg" class="mb-4">{{ __(':jumlah anggota', ['jumlah' => $this->anggotaDenganSaldo->count()]) }}</flux:subheading>
+            </div>
 
-        <div class="max-w-xl">
+            @if ($this->bisaMengelola)
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button icon="ellipsis-horizontal" size="sm" variant="ghost" aria-label="{{ __('Kelola grup') }}" data-test="kelola-grup" data-tur="kelola-grup" />
+
+                    <flux:menu>
+                        <flux:menu.item icon="pencil-square" x-on:click="$flux.modal('ubah-grup').show()" data-test="ubah-nama-grup">{{ __('Ganti nama grup') }}</flux:menu.item>
+                        <flux:menu.separator />
+                        <flux:menu.item
+                            icon="trash"
+                            variant="danger"
+                            data-test="hapus-grup"
+                            x-on:click="$dispatch('konfirmasi', {
+                                judul: {{ \Illuminate\Support\Js::from(__('Hapus grup :grup?', ['grup' => $grup->nama])) }},
+                                pesan: {{ \Illuminate\Support\Js::from(__('Semua tagihan, pembayaran, dan bukti bayar di grup ini ikut terhapus. Tindakan ini tidak bisa dibatalkan.')) }},
+                                tombol: {{ \Illuminate\Support\Js::from(__('Hapus grup')) }},
+                                bahaya: true,
+                                aksi: () => $wire.hapusGrup(),
+                            })"
+                        >{{ __('Hapus grup') }}</flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            @endif
+        </div>
+
+        <div class="max-w-xl" data-tur="link-undangan">
             <flux:input
                 :value="route('grup.gabung', $grup->kode_undangan)"
                 label="{{ __('Link undangan') }}"
@@ -134,18 +307,46 @@ new #[Title('Detail grup')] class extends Component {
                             <flux:text>{{ $baris['anggota']->user_id ? __('Punya akun') : __('Tanpa akun') }}</flux:text>
                         </div>
 
-                        @if ($baris['saldo'] < 0)
-                            <flux:badge color="red">{{ __('Utang :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
-                        @elseif ($baris['saldo'] > 0)
-                            <flux:badge color="green">{{ __('Menerima :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
-                        @else
-                            <flux:badge color="zinc">{{ __('Lunas') }}</flux:badge>
-                        @endif
+                        <div class="flex items-center gap-1">
+                            @if ($baris['saldo'] < 0)
+                                <flux:badge color="red">{{ __('Utang :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
+                            @elseif ($baris['saldo'] > 0)
+                                <flux:badge color="green">{{ __('Menerima :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</flux:badge>
+                            @else
+                                <flux:badge color="zinc">{{ __('Lunas') }}</flux:badge>
+                            @endif
+
+                            @if ($this->bisaMengelola && (! $baris['anggota']->user_id || $baris['bisaDihapus']))
+                                <flux:dropdown position="bottom" align="end">
+                                    <flux:button icon="ellipsis-vertical" size="sm" variant="subtle" aria-label="{{ __('Atur :nama', ['nama' => $baris['anggota']->nama]) }}" data-test="atur-anggota-{{ $baris['anggota']->id }}" />
+
+                                    <flux:menu>
+                                        @unless ($baris['anggota']->user_id)
+                                            <flux:menu.item icon="pencil-square" wire:click="ubahAnggota({{ $baris['anggota']->id }})">{{ __('Ganti nama') }}</flux:menu.item>
+                                        @endunless
+
+                                        @if ($baris['bisaDihapus'])
+                                            <flux:menu.item
+                                                icon="user-minus"
+                                                variant="danger"
+                                                x-on:click="$dispatch('konfirmasi', {
+                                                    judul: {{ \Illuminate\Support\Js::from(__('Keluarkan :nama?', ['nama' => $baris['anggota']->nama])) }},
+                                                    pesan: {{ \Illuminate\Support\Js::from(__(':nama belum tercatat di tagihan mana pun, jadi saldo grup tidak berubah.', ['nama' => $baris['anggota']->nama])) }},
+                                                    tombol: {{ \Illuminate\Support\Js::from(__('Keluarkan')) }},
+                                                    bahaya: true,
+                                                    aksi: () => $wire.hapusAnggota({{ $baris['anggota']->id }}),
+                                                })"
+                                            >{{ __('Keluarkan dari grup') }}</flux:menu.item>
+                                        @endif
+                                    </flux:menu>
+                                </flux:dropdown>
+                            @endif
+                        </div>
                     </li>
                 @endforeach
             </ul>
 
-            <form wire:submit="tambahAnggota" class="flex items-end gap-3">
+            <form wire:submit="tambahAnggota" class="flex items-end gap-3" data-tur="tambah-anggota">
                 <div class="flex-1">
                     <flux:input wire:model="namaAnggota" label="{{ __('Tambah anggota') }}" type="text" placeholder="{{ __('Nama, misalnya Sinta') }}" />
                 </div>
@@ -155,7 +356,7 @@ new #[Title('Detail grup')] class extends Component {
         </flux:card>
 
         <div class="space-y-6">
-            <flux:card class="space-y-4">
+            <flux:card class="space-y-4" data-tur="rencana-pelunasan">
                 <flux:heading size="lg" level="2">{{ __('Siapa bayar ke siapa') }}</flux:heading>
 
                 @if ($this->rencanaPelunasan === [])
@@ -175,7 +376,7 @@ new #[Title('Detail grup')] class extends Component {
             <flux:card class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <flux:heading size="lg" level="2">{{ __('Tagihan') }}</flux:heading>
-                    <flux:button :href="route('tagihan.create', $grup)" variant="primary" size="sm" icon="plus" wire:navigate data-test="tambah-tagihan">{{ __('Tambah tagihan') }}</flux:button>
+                    <flux:button :href="route('tagihan.create', $grup)" variant="primary" size="sm" icon="plus" wire:navigate data-test="tambah-tagihan" data-tur="tambah-tagihan">{{ __('Tambah tagihan') }}</flux:button>
                 </div>
 
                 @if ($this->daftarTagihan->isEmpty())
@@ -198,4 +399,38 @@ new #[Title('Detail grup')] class extends Component {
             </flux:card>
         </div>
     </div>
+
+    @if ($this->bisaMengelola)
+        <flux:modal name="ubah-grup" focusable class="w-full max-w-lg">
+            <form wire:submit="ubahNamaGrup" class="space-y-6">
+                <flux:heading size="lg">{{ __('Ganti nama grup') }}</flux:heading>
+
+                <flux:input wire:model="namaGrup" label="{{ __('Nama grup') }}" type="text" required />
+
+                <div class="flex justify-end gap-2">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Batal') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button variant="primary" type="submit" data-test="simpan-nama-grup">{{ __('Simpan') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+
+        <flux:modal name="ubah-anggota" focusable class="w-full max-w-lg">
+            <form wire:submit="simpanAnggota" class="space-y-6">
+                <flux:heading size="lg">{{ __('Ganti nama anggota') }}</flux:heading>
+
+                <flux:input wire:model="namaAnggotaBaru" label="{{ __('Nama') }}" type="text" required />
+
+                <div class="flex justify-end gap-2">
+                    <flux:modal.close>
+                        <flux:button variant="filled">{{ __('Batal') }}</flux:button>
+                    </flux:modal.close>
+
+                    <flux:button variant="primary" type="submit" data-test="simpan-nama-anggota">{{ __('Simpan') }}</flux:button>
+                </div>
+            </form>
+        </flux:modal>
+    @endif
 </section>

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -77,6 +78,26 @@ class Grup extends Model
     public function punyaAnggota(User $user): bool
     {
         return $this->anggota()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Apakah user ini boleh mengganti nama, menghapus grup, dan mengatur anggota.
+     */
+    public function bisaDikelolaOleh(User $user): bool
+    {
+        return $this->dibuat_oleh === $user->id;
+    }
+
+    /**
+     * Hapus grup beserta semua tagihan, pembayaran, dan foto bukti bayarnya.
+     */
+    public function hapusSemua(): void
+    {
+        $fotoBukti = $this->pembayaran()->whereNotNull('bukti_path')->pluck('bukti_path')->all();
+
+        DB::transaction(fn () => $this->delete());
+
+        Storage::disk('local')->delete($fotoBukti);
     }
 
     /**

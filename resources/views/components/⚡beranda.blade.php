@@ -95,13 +95,24 @@ new class extends Component {
 }; ?>
 
 <div class="w-full space-y-8">
+    <x-tur nama="beranda" :langkah="[
+        ['judul' => __('Selamat datang di Urunan!'), 'isi' => __('Urunan membantu patungan bareng teman: catat tagihan, bagi otomatis, dan pantau siapa yang sudah bayar. Yuk, kenalan sebentar.')],
+        ['elemen' => '[data-tur=mulai-patungan]', 'judul' => __('Mulai dari sini'), 'isi' => __('Belum punya grup? Buat grup pertama untuk acara atau teman kos, lalu ajak teman bergabung.')],
+        ['elemen' => '[data-tur=perlu-dibayar]', 'judul' => __('Yang perlu kamu bayar'), 'isi' => __('Semua bagianmu yang belum lunas muncul di sini, lengkap dengan tombol untuk membuka tagihannya.')],
+        ['elemen' => '[data-tur=grup-kamu]', 'judul' => __('Grup kamu'), 'isi' => __('Ringkasan grup yang kamu ikuti beserta saldo kamu di tiap grup.')],
+        ['elemen' => '[data-tur=menu-grup]', 'judul' => __('Grup patungan'), 'isi' => __('Semua grup ada di menu ini. Buka grup untuk menambah anggota dan mencatat tagihan.'), 'sisi' => 'right'],
+        ['elemen' => ['[data-tur=menu-notifikasi]', '[data-tur=menu-notifikasi-hp]'], 'judul' => __('Notifikasi'), 'isi' => __('Kabar tagihan baru, bukti bayar masuk, dan konfirmasi pembayaran muncul di sini.'), 'sisi' => 'right'],
+        ['elemen' => '[data-tur=pilih-bahasa]', 'judul' => __('Pilih bahasa'), 'isi' => __('Ganti tampilan ke Bahasa Indonesia atau English kapan saja.'), 'sisi' => 'right'],
+        ['elemen' => ['[data-tur=tombol-panduan]', '[data-tur=tombol-panduan-hp]'], 'judul' => __('Butuh panduan lagi?'), 'isi' => __('Tekan tombol ini untuk mengulang panduan di halaman mana pun.'), 'sisi' => 'right'],
+    ]" />
+
     <div>
         <flux:heading size="xl" level="1">{{ __('Halo, :nama', ['nama' => auth()->user()->name]) }}</flux:heading>
         <flux:subheading size="lg">{{ __('Ini ringkasan patunganmu hari ini.') }}</flux:subheading>
     </div>
 
     @if ($this->keanggotaan->isEmpty())
-        <flux:card class="space-y-4">
+        <flux:card class="space-y-4" data-tur="mulai-patungan">
             <flux:heading size="lg" level="2">{{ __('Mulai patungan pertamamu') }}</flux:heading>
             <flux:text>
                 {{ __('Buat grup untuk acara atau lingkaran pertemananmu, misalnya "Liburan Pangandaran" atau "Kos bulan ini", lalu catat tagihan dan bagikan link undangannya ke grup WhatsApp.') }}
@@ -148,7 +159,7 @@ new class extends Component {
         @endif
 
         <section class="space-y-3">
-            <flux:heading size="lg" level="2">{{ __('Yang perlu kamu bayar') }}</flux:heading>
+            <flux:heading size="lg" level="2" data-tur="perlu-dibayar">{{ __('Yang perlu kamu bayar') }}</flux:heading>
 
             @if ($this->perluDibayar->isEmpty())
                 <flux:card>
@@ -182,7 +193,7 @@ new class extends Component {
 
         <section class="space-y-3">
             <div class="flex items-center justify-between gap-3">
-                <flux:heading size="lg" level="2">{{ __('Grup kamu') }}</flux:heading>
+                <flux:heading size="lg" level="2" data-tur="grup-kamu">{{ __('Grup kamu') }}</flux:heading>
                 <flux:button :href="route('grup.index')" size="sm" variant="subtle" wire:navigate>{{ __('Lihat semua') }}</flux:button>
             </div>
 

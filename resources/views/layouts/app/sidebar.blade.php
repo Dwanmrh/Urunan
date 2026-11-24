@@ -17,11 +17,12 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="user-group" :href="route('grup.index')" :current="request()->routeIs('grup.*')" wire:navigate>
+                    <flux:sidebar.item icon="user-group" :href="route('grup.index')" :current="request()->routeIs('grup.*')" wire:navigate data-tur="menu-grup">
                         {{ __('Grup patungan') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item
                         icon="bell"
+                        data-tur="menu-notifikasi"
                         :href="route('notifikasi.index')"
                         :current="request()->routeIs('notifikasi.*')"
                         :badge="$jumlahNotifikasiBaru ?: null"
@@ -40,7 +41,13 @@
 
             <flux:spacer />
 
-            <x-pilih-bahasa class="px-1" />
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="question-mark-circle" x-on:click="mulaiTur({{ \Illuminate\Support\Js::from(__('Panduan belum tersedia di halaman ini.')) }})" data-tur="tombol-panduan" data-test="buka-panduan">
+                    {{ __('Panduan') }}
+                </flux:sidebar.item>
+            </flux:sidebar.nav>
+
+            <x-pilih-bahasa class="px-1" data-tur="pilih-bahasa" />
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
@@ -51,7 +58,11 @@
 
             <flux:spacer />
 
-            <a href="{{ route('notifikasi.index') }}" wire:navigate class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ $jumlahNotifikasiBaru ? __('Notifikasi, :jumlah belum dibaca', ['jumlah' => $jumlahNotifikasiBaru]) : __('Notifikasi') }}">
+            <button type="button" x-on:click="mulaiTur({{ \Illuminate\Support\Js::from(__('Panduan belum tersedia di halaman ini.')) }})" class="inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ __('Panduan') }}" data-tur="tombol-panduan-hp">
+                <flux:icon.question-mark-circle class="size-5" />
+            </button>
+
+            <a href="{{ route('notifikasi.index') }}" wire:navigate data-tur="menu-notifikasi-hp" class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ $jumlahNotifikasiBaru ? __('Notifikasi, :jumlah belum dibaca', ['jumlah' => $jumlahNotifikasiBaru]) : __('Notifikasi') }}">
                 <flux:icon.bell class="size-5" />
                 @if ($jumlahNotifikasiBaru)
                     <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-[10px] font-semibold text-white">{{ $jumlahNotifikasiBaru > 9 ? '9+' : $jumlahNotifikasiBaru }}</span>
@@ -110,9 +121,9 @@
         {{ $slot }}
 
         @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
+            <x-toast-urunan />
+            <x-dialog-konfirmasi />
+            <x-indikator-memuat />
         @endpersist
 
         @fluxScripts

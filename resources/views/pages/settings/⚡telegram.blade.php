@@ -85,7 +85,17 @@ new #[Title('Telegram')] class extends Component {
 
                 <div class="flex flex-wrap gap-2">
                     <flux:button wire:click="kirimUji" icon="paper-airplane" data-test="kirim-uji-telegram">{{ __('Kirim pesan uji') }}</flux:button>
-                    <flux:button wire:click="putuskan" wire:confirm="{{ __('Berhenti menerima notifikasi di Telegram?') }}" variant="danger" data-test="putuskan-telegram">{{ __('Putuskan') }}</flux:button>
+                    <flux:button
+                        x-on:click="$dispatch('konfirmasi', {
+                            judul: {{ \Illuminate\Support\Js::from(__('Putuskan Telegram?')) }},
+                            pesan: {{ \Illuminate\Support\Js::from(__('Kamu berhenti menerima notifikasi Urunan di Telegram. Bisa dihubungkan lagi kapan saja.')) }},
+                            tombol: {{ \Illuminate\Support\Js::from(__('Putuskan')) }},
+                            bahaya: true,
+                            aksi: () => $wire.putuskan(),
+                        })"
+                        variant="danger"
+                        data-test="putuskan-telegram"
+                    >{{ __('Putuskan') }}</flux:button>
                 </div>
             </div>
         @else

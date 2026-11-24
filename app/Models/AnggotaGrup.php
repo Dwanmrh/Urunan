@@ -39,6 +39,26 @@ class AnggotaGrup extends Model
     }
 
     /**
+     * Apakah anggota ini sudah tercatat di tagihan atau pembayaran.
+     *
+     * Anggota yang sudah tercatat tidak boleh dihapus supaya saldo grup tidak berubah diam-diam.
+     */
+    public function sudahTercatat(): bool
+    {
+        return Tagihan::query()->where('dibayar_oleh', $this->id)->exists()
+            || BagianTagihan::query()->where('anggota_grup_id', $this->id)->exists()
+            || Pembayaran::query()->where('dari_anggota_id', $this->id)->orWhere('ke_anggota_id', $this->id)->exists();
+    }
+
+    /**
+     * Apakah anggota ini boleh dikeluarkan dari grup.
+     */
+    public function bisaDihapus(): bool
+    {
+        return $this->user_id !== $this->grup->dibuat_oleh && ! $this->sudahTercatat();
+    }
+
+    /**
      * @return BelongsTo<Grup, $this>
      */
     public function grup(): BelongsTo

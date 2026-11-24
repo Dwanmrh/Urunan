@@ -8,6 +8,7 @@ use App\Models\Tagihan;
 use App\Notifications\Channels\TelegramChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notification;
 
 abstract class NotifikasiUrunan extends Notification implements ShouldQueue
@@ -51,9 +52,20 @@ abstract class NotifikasiUrunan extends Notification implements ShouldQueue
     }
 
     /**
+     * Kalimat judul dan isi notifikasi dalam bahasa Indonesia. Kalimat ini juga
+     * menjadi kunci terjemahan di lang/en.json.
+     */
+    public const JUDUL = '';
+
+    public const PESAN = '';
+
+    /**
      * Get the array representation of the notification.
      *
-     * @return array{judul: string, pesan: string, url: string}
+     * Selain teks jadi, data mentahnya ikut disimpan supaya notifikasi bisa
+     * ditampilkan ulang dalam bahasa yang sedang dipilih penerima.
+     *
+     * @return array{judul: string, pesan: string, url: string, param: array<string, int|string>}
      */
     public function toArray(object $notifiable): array
     {
@@ -61,7 +73,68 @@ abstract class NotifikasiUrunan extends Notification implements ShouldQueue
             'judul' => $this->judul(),
             'pesan' => $this->pesan(),
             'url' => $this->urlTagihan(absolute: false),
+            'param' => [...$this->param(), 'jumlah' => $this->jumlah],
         ];
+    }
+
+    /**
+     * Susun judul dan isi notifikasi tersimpan dalam bahasa yang sedang aktif.
+     *
+     * Notifikasi lama yang belum menyimpan data mentah dibaca ulang dari kalimat
+     * Indonesianya. Kalau tidak cocok, teks yang tersimpan ditampilkan apa adanya.
+     *
+     * @return array{judul: string, pesan: string}
+     */
+    public static function teksUntuk(DatabaseNotification $notifikasi): array
+    {
+        $data = $notifikasi->data;
+        $tersimpan = [
+            'judul' => (string) ($data['judul'] ?? __('Notifikasi')),
+            'pesan' => (string) ($data['pesan'] ?? ''),
+        ];
+
+        $kelas = $notifikasi->type;
+
+        if (! is_string($kelas) || ! is_subclass_of($kelas, self::class) || $kelas::PESAN === '') {
+            return $tersimpan;
+        }
+
+        $param = $data['param'] ?? self::bacaParam($kelas::PESAN, $tersimpan['pesan']);
+
+        if (! is_array($param)) {
+            return $tersimpan;
+        }
+
+        if (is_int($param['jumlah'] ?? null)) {
+            $param['jumlah'] = FormatRupiah::rp($param['jumlah']);
+        }
+
+        return [
+            'judul' => __($kelas::JUDUL),
+            'pesan' => __($kelas::PESAN, array_map('strval', $param)),
+        ];
+    }
+
+    /**
+     * Ambil nilai :param dari kalimat yang sudah jadi, misalnya
+     * ":nama mencatat :tagihan." dan "Deren mencatat Ngegrill." menjadi
+     * ['nama' => 'Deren', 'tagihan' => 'Ngegrill'].
+     *
+     * @return array<string, string>|null
+     */
+    private static function bacaParam(string $pola, string $kalimat): ?array
+    {
+        $regex = preg_replace_callback(
+            '/:([a-z]+)|([^:]+|:)/',
+            fn (array $m): string => ($m[1] ?? '') !== '' ? '(?<'.$m[1].'>.+?)' : preg_quote($m[0], '/'),
+            $pola,
+        );
+
+        if (! preg_match('/^'.$regex.'$/su', $kalimat, $cocok)) {
+            return null;
+        }
+
+        return array_filter($cocok, fn ($kunci): bool => is_string($kunci), ARRAY_FILTER_USE_KEY);
     }
 
     /**
@@ -73,14 +146,27 @@ abstract class NotifikasiUrunan extends Notification implements ShouldQueue
     }
 
     /**
+     * Nilai yang dimasukkan ke kalimat notifikasi, selain jumlah.
+     *
+     * @return array<string, string>
+     */
+    abstract protected function param(): array;
+
+    /**
      * Judul singkat notifikasi.
      */
-    abstract protected function judul(): string;
+    protected function judul(): string
+    {
+        return __(static::JUDUL);
+    }
 
     /**
      * Isi notifikasi.
      */
-    abstract protected function pesan(): string;
+    protected function pesan(): string
+    {
+        return __(static::PESAN, [...$this->param(), 'jumlah' => $this->rupiah()]);
+    }
 
     /**
      * Nominal dengan titik ribuan, misalnya "Rp 50.000".

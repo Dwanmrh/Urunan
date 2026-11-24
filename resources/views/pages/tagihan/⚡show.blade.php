@@ -72,6 +72,15 @@ new #[Title('Detail tagihan')] class extends Component {
     }
 
     /**
+     * Apakah user yang sedang login boleh mengedit atau menghapus tagihan ini.
+     */
+    #[Computed]
+    public function bisaMengubah(): bool
+    {
+        return $this->tagihan->bisaDiubahOleh(Auth::user());
+    }
+
+    /**
      * Sisa bagian user yang sedang login di tagihan ini.
      */
     #[Computed]
@@ -171,7 +180,9 @@ new #[Title('Detail tagihan')] class extends Component {
      */
     public function hapus(): void
     {
-        $this->pastikanPengelola();
+        $this->pastikanAnggota();
+
+        abort_unless($this->tagihan->bisaDiubahOleh(Auth::user()), 403);
 
         $this->tagihan->hapus();
 
@@ -206,6 +217,12 @@ new #[Title('Detail tagihan')] class extends Component {
 }; ?>
 
 <section class="w-full max-w-3xl">
+    <x-tur nama="detail-tagihan" :langkah="[
+        ['elemen' => '[data-tur=bagian-tiap-orang]', 'judul' => __('Status tiap orang'), 'isi' => __('Lihat bagian tiap anggota dan statusnya: belum bayar, menunggu konfirmasi, atau lunas.'), 'sisi' => 'top'],
+        ['elemen' => '[data-tur=kirim-bukti]', 'judul' => __('Bayar bagianmu'), 'isi' => __('Transfer ke yang menalangi, lalu kirim foto bukti transfer di sini. Statusmu jadi lunas setelah dia mengonfirmasi.'), 'sisi' => 'left'],
+        ['judul' => __('Untuk yang menalangi'), 'isi' => __('Pembayar bisa mengonfirmasi atau menolak bukti, dan menandai lunas kalau dibayar tunai.')],
+    ]" />
+
     <div class="mb-6">
         <flux:button :href="route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">{{ $grup->nama }}</flux:button>
 
@@ -217,12 +234,17 @@ new #[Title('Detail tagihan')] class extends Component {
                 </flux:subheading>
             </div>
 
-            @if ($this->bisaMengelola)
+            @if ($this->bisaMengubah)
                 <div class="flex gap-2">
                     <flux:button :href="route('tagihan.edit', [$grup, $tagihan])" icon="pencil-square" size="sm" wire:navigate data-test="edit-tagihan">{{ __('Edit') }}</flux:button>
                     <flux:button
-                        wire:click="hapus"
-                        wire:confirm="{{ __('Hapus tagihan ini? Pembayaran yang sudah diterima tetap tercatat di saldo grup.') }}"
+                        x-on:click="$dispatch('konfirmasi', {
+                            judul: {{ \Illuminate\Support\Js::from(__('Hapus tagihan :tagihan?', ['tagihan' => $tagihan->judul])) }},
+                            pesan: {{ \Illuminate\Support\Js::from(__('Pembayaran yang sudah diterima tetap tercatat di saldo grup.')) }},
+                            tombol: {{ \Illuminate\Support\Js::from(__('Hapus')) }},
+                            bahaya: true,
+                            aksi: () => $wire.hapus(),
+                        })"
                         icon="trash"
                         size="sm"
                         variant="danger"
@@ -258,7 +280,7 @@ new #[Title('Detail tagihan')] class extends Component {
         </flux:card>
     @endif
 
-    <flux:card class="space-y-3">
+    <flux:card class="space-y-3" data-tur="bagian-tiap-orang">
         <flux:heading size="lg" level="2">{{ __('Bagian tiap orang') }}</flux:heading>
 
         @unless ($this->bisaMengelola)
@@ -303,8 +325,13 @@ new #[Title('Detail tagihan')] class extends Component {
                                 <flux:button :href="route('pembayaran.bukti', [$grup, $menunggu])" target="_blank" size="sm" variant="ghost" icon="photo">{{ __('Lihat bukti') }}</flux:button>
                                 <flux:button wire:click="konfirmasi({{ $menunggu->id }})" size="sm" variant="primary" data-test="konfirmasi-{{ $menunggu->id }}">{{ __('Konfirmasi') }}</flux:button>
                                 <flux:button
-                                    wire:click="tolak({{ $menunggu->id }})"
-                                    wire:confirm="{{ __('Tolak bukti dari :nama? Buktinya akan dihapus dan perlu dikirim ulang.', ['nama' => $baris['anggota']->nama]) }}"
+                                    x-on:click="$dispatch('konfirmasi', {
+                                        judul: {{ \Illuminate\Support\Js::from(__('Tolak bukti dari :nama?', ['nama' => $baris['anggota']->nama])) }},
+                                        pesan: {{ \Illuminate\Support\Js::from(__('Buktinya akan dihapus dan :nama perlu mengirim ulang.', ['nama' => $baris['anggota']->nama])) }},
+                                        tombol: {{ \Illuminate\Support\Js::from(__('Tolak')) }},
+                                        bahaya: true,
+                                        aksi: () => $wire.tolak({{ $menunggu->id }}),
+                                    })"
                                     size="sm"
                                     variant="danger"
                                 >
@@ -312,8 +339,12 @@ new #[Title('Detail tagihan')] class extends Component {
                                 </flux:button>
                             @else
                                 <flux:button
-                                    wire:click="tandaiLunas({{ $baris['anggota']->id }})"
-                                    wire:confirm="{{ __('Tandai :nama sudah membayar langsung, misalnya tunai?', ['nama' => $baris['anggota']->nama]) }}"
+                                    x-on:click="$dispatch('konfirmasi', {
+                                        judul: {{ \Illuminate\Support\Js::from(__('Tandai :nama lunas?', ['nama' => $baris['anggota']->nama])) }},
+                                        pesan: {{ \Illuminate\Support\Js::from(__('Pakai ini kalau :nama sudah membayar langsung, misalnya tunai.', ['nama' => $baris['anggota']->nama])) }},
+                                        tombol: {{ \Illuminate\Support\Js::from(__('Tandai lunas')) }},
+                                        aksi: () => $wire.tandaiLunas({{ $baris['anggota']->id }}),
+                                    })"
                                     size="sm"
                                     variant="primary"
                                     data-test="tandai-lunas-{{ $baris['anggota']->id }}"
@@ -323,7 +354,7 @@ new #[Title('Detail tagihan')] class extends Component {
                             @endif
                         @elseif ($this->anggotaSaya?->id === $baris['anggota']->id && ! $baris['pembayar'] && $baris['sisa'] > 0 && ! $menunggu)
                             <flux:modal.trigger name="kirim-bukti">
-                                <flux:button size="sm" variant="primary" icon="arrow-up-tray" data-test="buka-kirim-bukti">{{ __('Kirim bukti bayar') }}</flux:button>
+                                <flux:button size="sm" variant="primary" icon="arrow-up-tray" data-test="buka-kirim-bukti" data-tur="kirim-bukti">{{ __('Kirim bukti bayar') }}</flux:button>
                             </flux:modal.trigger>
                         @endif
                     </div>

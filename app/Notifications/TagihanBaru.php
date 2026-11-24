@@ -4,17 +4,15 @@ namespace App\Notifications;
 
 class TagihanBaru extends NotifikasiUrunan
 {
-    protected function judul(): string
-    {
-        return __('Tagihan baru');
-    }
+    public const JUDUL = 'Tagihan baru';
 
-    protected function pesan(): string
+    public const PESAN = ':nama mencatat :tagihan. Bagianmu :jumlah.';
+
+    protected function param(): array
     {
-        return __(':nama mencatat :tagihan. Bagianmu :jumlah.', [
+        return [
             'nama' => $this->tagihan->pembayar->nama,
             'tagihan' => $this->tagihan->judul,
-            'jumlah' => $this->rupiah(),
-        ]);
+        ];
     }
 }

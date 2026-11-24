@@ -6,6 +6,10 @@ use App\Models\Tagihan;
 
 class BuktiBayarMasuk extends NotifikasiUrunan
 {
+    public const JUDUL = 'Bukti bayar masuk';
+
+    public const PESAN = ':nama mengirim bukti :jumlah untuk :tagihan. Cek lalu konfirmasi.';
+
     /**
      * Create a new notification instance.
      */
@@ -14,17 +18,11 @@ class BuktiBayarMasuk extends NotifikasiUrunan
         parent::__construct($tagihan, $jumlah);
     }
 
-    protected function judul(): string
+    protected function param(): array
     {
-        return __('Bukti bayar masuk');
-    }
-
-    protected function pesan(): string
-    {
-        return __(':nama mengirim bukti :jumlah untuk :tagihan. Cek lalu konfirmasi.', [
+        return [
             'nama' => $this->namaPengirim,
-            'jumlah' => $this->rupiah(),
             'tagihan' => $this->tagihan->judul,
-        ]);
+        ];
     }
 }

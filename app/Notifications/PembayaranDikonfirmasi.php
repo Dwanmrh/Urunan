@@ -4,17 +4,15 @@ namespace App\Notifications;
 
 class PembayaranDikonfirmasi extends NotifikasiUrunan
 {
-    protected function judul(): string
-    {
-        return __('Pembayaran diterima');
-    }
+    public const JUDUL = 'Pembayaran diterima';
 
-    protected function pesan(): string
+    public const PESAN = 'Pembayaranmu :jumlah untuk :tagihan sudah dikonfirmasi :nama. Status: lunas.';
+
+    protected function param(): array
     {
-        return __('Pembayaranmu :jumlah untuk :tagihan sudah dikonfirmasi :nama. Status: lunas.', [
-            'jumlah' => $this->rupiah(),
-            'tagihan' => $this->tagihan->judul,
+        return [
             'nama' => $this->tagihan->pembayar->nama,
-        ]);
+            'tagihan' => $this->tagihan->judul,
+        ];
     }
 }

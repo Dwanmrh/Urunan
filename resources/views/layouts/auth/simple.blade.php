@@ -21,9 +21,9 @@
         </div>
 
         @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
+            <x-toast-urunan />
+            <x-dialog-konfirmasi />
+            <x-indikator-memuat />
         @endpersist
 
         @fluxScripts

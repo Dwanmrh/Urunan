@@ -47,7 +47,7 @@ new #[Title('Tagihan')] class extends Component {
 
         if ($tagihan?->exists) {
             abort_unless($tagihan->grup_id === $grup->id, 404);
-            abort_unless($tagihan->bisaDikelolaOleh(Auth::user()), 403);
+            abort_unless($tagihan->bisaDiubahOleh(Auth::user()), 403);
 
             $this->tagihan = $tagihan;
             $this->isiDariTagihan($tagihan);
@@ -132,7 +132,7 @@ new #[Title('Tagihan')] class extends Component {
         abort_unless($this->grup->punyaAnggota(Auth::user()), 403);
 
         if ($this->tagihan !== null) {
-            abort_unless($this->tagihan->bisaDikelolaOleh(Auth::user()), 403);
+            abort_unless($this->tagihan->bisaDiubahOleh(Auth::user()), 403);
         }
 
         $idAnggota = $this->anggota->pluck('id')->all();
@@ -292,6 +292,12 @@ new #[Title('Tagihan')] class extends Component {
 }; ?>
 
 <section class="w-full max-w-2xl">
+    <x-tur nama="form-tagihan" :langkah="[
+        ['elemen' => '[data-tur=pembayar]', 'judul' => __('Siapa yang membayar dulu?'), 'isi' => __('Pilih orang yang menalangi. Dia yang nanti menerima uang dan mengonfirmasi bukti bayar.')],
+        ['elemen' => '[data-tur=cara-bagi]', 'judul' => __('Bagi rata atau per item'), 'isi' => __('Bagi rata untuk tagihan sama besar. Per item kalau tiap orang pesan berbeda, item bersama dibagi ke yang ikut menanggung.')],
+        ['elemen' => '[data-tur=perkiraan]', 'judul' => __('Cek sebelum simpan'), 'isi' => __('Bagian tiap orang langsung dihitung saat kamu mengisi form. Setelah disimpan, anggota yang punya akun dapat notifikasi.'), 'sisi' => 'top'],
+    ]" />
+
     <div class="mb-6">
         <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">
             {{ $tagihan ? $tagihan->judul : $grup->nama }}
@@ -309,14 +315,14 @@ new #[Title('Tagihan')] class extends Component {
         <div class="grid gap-4 sm:grid-cols-2">
             <flux:input wire:model="tanggal" label="{{ __('Tanggal') }}" type="date" required />
 
-            <flux:select wire:model="dibayarOleh" label="{{ __('Dibayar dulu oleh') }}">
+            <flux:select wire:model="dibayarOleh" label="{{ __('Dibayar dulu oleh') }}" data-tur="pembayar">
                 @foreach ($this->anggota as $anggota)
                     <flux:select.option value="{{ $anggota->id }}" wire:key="pembayar-{{ $anggota->id }}">{{ $anggota->nama }}</flux:select.option>
                 @endforeach
             </flux:select>
         </div>
 
-        <flux:radio.group wire:model.live="caraBagi" label="{{ __('Cara membagi') }}" variant="segmented">
+        <flux:radio.group wire:model.live="caraBagi" label="{{ __('Cara membagi') }}" variant="segmented" data-tur="cara-bagi">
             @foreach (\App\Enums\CaraBagi::cases() as $cara)
                 <flux:radio value="{{ $cara->value }}" label="{{ $cara->label() }}" wire:key="cara-{{ $cara->value }}" />
             @endforeach
@@ -378,7 +384,7 @@ new #[Title('Tagihan')] class extends Component {
         @endif
 
         <flux:card class="space-y-3">
-            <flux:heading level="2">{{ __('Perkiraan bagian tiap orang') }}</flux:heading>
+            <flux:heading level="2" data-tur="perkiraan">{{ __('Perkiraan bagian tiap orang') }}</flux:heading>
 
             @if ($this->perkiraanBagian === [])
                 <flux:text>{{ __('Isi nominal untuk melihat bagian tiap orang.') }}</flux:text>

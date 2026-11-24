@@ -4,17 +4,15 @@ namespace App\Notifications;
 
 class BuktiBayarDitolak extends NotifikasiUrunan
 {
-    protected function judul(): string
-    {
-        return __('Bukti bayar ditolak');
-    }
+    public const JUDUL = 'Bukti bayar ditolak';
 
-    protected function pesan(): string
+    public const PESAN = ':nama menolak bukti :jumlah untuk :tagihan. Cek lagi lalu kirim ulang.';
+
+    protected function param(): array
     {
-        return __(':nama menolak bukti :jumlah untuk :tagihan. Cek lagi lalu kirim ulang.', [
+        return [
             'nama' => $this->tagihan->pembayar->nama,
-            'jumlah' => $this->rupiah(),
             'tagihan' => $this->tagihan->judul,
-        ]);
+        ];
     }
 }
