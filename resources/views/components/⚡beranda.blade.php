@@ -107,12 +107,12 @@ new class extends Component {
 
 <div class="w-full space-y-6">
     <x-tur nama="beranda" :langkah="[
-        ['judul' => __('Selamat datang di Urunan!'), 'isi' => __('Urunan membantu patungan bareng teman: catat tagihan, bagi otomatis, dan pantau siapa yang sudah bayar. Yuk, kenalan sebentar.')],
+        ['judul' => __('Selamat datang di Udunan!'), 'isi' => __('Udunan membantu patungan bareng teman: catat tagihan, bagi otomatis, dan pantau siapa yang sudah bayar. Yuk, kenalan sebentar.')],
         ['elemen' => '[data-tur=mulai-patungan]', 'judul' => __('Mulai dari sini'), 'isi' => __('Belum punya grup? Buat grup pertama untuk acara atau teman kos, lalu ajak teman bergabung.')],
         ['elemen' => '[data-tur=ringkasan-saldo]', 'judul' => __('Ringkasan saldo'), 'isi' => __('Total yang harus kamu bayar dan yang akan kamu terima dari semua grup.')],
         ['elemen' => '[data-tur=perlu-dibayar]', 'judul' => __('Yang perlu kamu bayar'), 'isi' => __('Semua bagianmu yang belum lunas muncul di sini, lengkap dengan tombol untuk membuka tagihannya.')],
         ['elemen' => '[data-tur=grup-kamu]', 'judul' => __('Grup kamu'), 'isi' => __('Ringkasan grup yang kamu ikuti beserta saldo kamu di tiap grup.')],
-        ['elemen' => '[data-tur=menu-grup]', 'judul' => __('Grup patungan'), 'isi' => __('Semua grup ada di menu ini. Buka grup untuk menambah anggota dan mencatat tagihan.'), 'sisi' => 'right'],
+        ['elemen' => ['[data-tur=menu-grup]', '[data-tur=menu-grup-hp]'], 'judul' => __('Grup patungan'), 'isi' => __('Semua grup ada di menu ini. Buka grup untuk menambah anggota dan mencatat tagihan.'), 'sisi' => 'right'],
         ['elemen' => ['[data-tur=menu-notifikasi]', '[data-tur=menu-notifikasi-hp]'], 'judul' => __('Notifikasi'), 'isi' => __('Kabar tagihan baru, bukti bayar masuk, dan konfirmasi pembayaran muncul di sini.'), 'sisi' => 'right'],
         ['elemen' => '[data-tur=pilih-bahasa]', 'judul' => __('Pilih bahasa'), 'isi' => __('Ganti tampilan ke Bahasa Indonesia atau English kapan saja.'), 'sisi' => 'right'],
         ['elemen' => ['[data-tur=tombol-panduan]', '[data-tur=tombol-panduan-hp]'], 'judul' => __('Butuh panduan lagi?'), 'isi' => __('Tekan tombol ini untuk mengulang panduan di halaman mana pun.'), 'sisi' => 'right'],
@@ -144,6 +144,8 @@ new class extends Component {
             </div>
         </div>
     </section>
+
+    <x-pasang-aplikasi />
 
     @if ($this->keanggotaan->isEmpty())
         {{-- Belum punya grup --}}
@@ -181,20 +183,20 @@ new class extends Component {
     @else
         {{-- Ringkasan saldo --}}
         @php($saldoBersih = $this->ringkasan['akanTerima'] - $this->ringkasan['harusBayar'])
-        <section class="grid gap-4 sm:grid-cols-3" data-tur="ringkasan-saldo">
+        <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4" data-tur="ringkasan-saldo">
             @foreach ([
                 ['label' => __('Harus kamu bayar'), 'jumlah' => $this->ringkasan['harusBayar'], 'ikon' => 'arrow-up-right', 'warna' => 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400', 'teks' => 'text-red-600 dark:text-red-400', 'awalan' => ''],
                 ['label' => __('Akan kamu terima'), 'jumlah' => $this->ringkasan['akanTerima'], 'ikon' => 'arrow-down-left', 'warna' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400', 'teks' => 'text-emerald-600 dark:text-emerald-400', 'awalan' => ''],
                 ['label' => __('Saldo bersih'), 'jumlah' => $saldoBersih, 'ikon' => 'scale', 'warna' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300', 'teks' => 'text-zinc-900 dark:text-white', 'awalan' => $saldoBersih < 0 ? '−' : ($saldoBersih > 0 ? '+' : '')],
             ] as $urutan => $kartu)
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-md motion-safe:animate-[muncul_0.5s_ease-out_both] dark:border-zinc-700 dark:bg-zinc-900" style="animation-delay: {{ 80 + $urutan * 80 }}ms">
+                <div @class(['rounded-2xl border border-zinc-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-md motion-safe:animate-[muncul_0.5s_ease-out_both] sm:p-5 dark:border-zinc-700 dark:bg-zinc-900', 'col-span-2 sm:col-span-1' => $urutan === 2]) style="animation-delay: {{ 80 + $urutan * 80 }}ms">
                     <div class="flex items-center justify-between">
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $kartu['label'] }}</p>
                         <span class="flex size-8 items-center justify-center rounded-lg {{ $kartu['warna'] }}">
                             <flux:icon :icon="$kartu['ikon']" variant="mini" class="size-4" />
                         </span>
                     </div>
-                    <p class="mt-3 text-2xl font-bold tabular-nums {{ $kartu['teks'] }}">{{ $kartu['awalan'] }}<x-rupiah :jumlah="$kartu['jumlah']" /></p>
+                    <p class="mt-2 text-xl font-bold tabular-nums sm:mt-3 sm:text-2xl {{ $kartu['teks'] }}">{{ $kartu['awalan'] }}<x-rupiah :jumlah="$kartu['jumlah']" /></p>
                 </div>
             @endforeach
         </section>

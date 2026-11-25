@@ -104,7 +104,7 @@ new #[Title('Statistik')] class extends Component {
     }
 
     /**
-     * Pemakaian fitur khas Urunan.
+     * Pemakaian fitur khas Udunan.
      *
      * @return array{rutinAktif: int, isiRekening: int, grupAktif: int}
      */
@@ -158,7 +158,7 @@ new #[Title('Statistik')] class extends Component {
                 <p class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold ring-1 ring-white/15">
                     <flux:icon.shield-check variant="micro" />{{ __('Khusus admin') }}
                 </p>
-                <h1 class="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{{ __('Statistik Urunan') }}</h1>
+                <h1 class="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">{{ __('Statistik Udunan') }}</h1>
                 <p class="mt-1 text-white/90">{{ __('Diperbarui otomatis tiap 10 detik. Hanya admin yang bisa melihat halaman ini.') }}</p>
             </div>
 

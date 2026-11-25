@@ -170,7 +170,7 @@ new #[Title('Notifikasi')] class extends Component {
                                     type="button"
                                     wire:click="hapus('{{ $notifikasi->id }}')"
                                     wire:loading.attr="disabled"
-                                    class="flex shrink-0 items-center px-3 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 dark:hover:bg-red-950/40"
+                                    class="flex shrink-0 items-center px-3 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 dark:hover:bg-red-950/40"
                                     aria-label="{{ __('Hapus notifikasi') }}"
                                     title="{{ __('Hapus notifikasi') }}"
                                     data-test="hapus-notifikasi"

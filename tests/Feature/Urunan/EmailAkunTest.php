@@ -30,7 +30,7 @@ test('pendaftar baru dikirimi email verifikasi', function () {
     Notification::assertSentTo(User::where('email', 'sinta@contoh.test')->first(), VerifyEmail::class);
 });
 
-test('email reset password memakai gaya dan bahasa Urunan', function () {
+test('email reset password memakai gaya dan bahasa Udunan', function () {
     $user = User::factory()->create(['name' => 'Dwan']);
 
     $html = (string) (new ResetPassword('token-uji'))->toMail($user)->render();

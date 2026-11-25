@@ -3,7 +3,7 @@
         <x-auth-header
             ikon="envelope"
             :title="__('Cek emailmu')"
-            :description="__('Kami sudah mengirim link verifikasi ke :email. Buka email itu lalu tekan tombol Verifikasi Email untuk mulai memakai Urunan.', ['email' => auth()->user()->email])"
+            :description="__('Kami sudah mengirim link verifikasi ke :email. Buka email itu lalu tekan tombol Verifikasi Email untuk mulai memakai Udunan.', ['email' => auth()->user()->email])"
         />
 
         @if (session('status') === 'verification-link-sent')

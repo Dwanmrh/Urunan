@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Isi email reset password dan verifikasi dengan gaya Urunan.
+     * Isi email reset password dan verifikasi dengan gaya Udunan.
      * Bahasanya mengikuti pilihan bahasa penerima.
      */
     protected function configureEmails(): void
@@ -53,9 +53,9 @@ class AppServiceProvider extends ServiceProvider
             ], false));
 
             return (new MailMessage)
-                ->subject(__('Reset password akun Urunan'))
+                ->subject(__('Reset password akun Udunan'))
                 ->greeting(__('Halo, :nama!', ['nama' => $user->name]))
-                ->line(__('Ada permintaan untuk mengganti password akun Urunan-mu. Tekan tombol di bawah untuk membuat password baru.'))
+                ->line(__('Ada permintaan untuk mengganti password akun Udunan-mu. Tekan tombol di bawah untuk membuat password baru.'))
                 ->action(__('Buat password baru'), $url)
                 ->line(__('Link ini berlaku :menit menit.', ['menit' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
                 ->line(__('Kalau kamu tidak meminta ini, abaikan saja email ini. Password-mu tetap aman.'));
@@ -63,11 +63,11 @@ class AppServiceProvider extends ServiceProvider
 
         VerifyEmail::toMailUsing(function (User $user, string $url): MailMessage {
             return (new MailMessage)
-                ->subject(__('Verifikasi email akun Urunan'))
+                ->subject(__('Verifikasi email akun Udunan'))
                 ->greeting(__('Halo, :nama!', ['nama' => $user->name]))
-                ->line(__('Terima kasih sudah mendaftar di Urunan. Tekan tombol di bawah untuk memverifikasi emailmu, lalu kamu bisa langsung mulai patungan.'))
+                ->line(__('Terima kasih sudah mendaftar di Udunan. Tekan tombol di bawah untuk memverifikasi emailmu, lalu kamu bisa langsung mulai patungan.'))
                 ->action(__('Verifikasi email'), $url)
-                ->line(__('Kalau kamu tidak merasa mendaftar di Urunan, abaikan saja email ini.'));
+                ->line(__('Kalau kamu tidak merasa mendaftar di Udunan, abaikan saja email ini.'));
         });
     }
 

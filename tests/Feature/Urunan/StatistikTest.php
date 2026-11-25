@@ -35,7 +35,7 @@ test('hanya admin yang bisa membuka halaman statistik', function () {
     $this->actingAs(User::factory()->create(['email' => 'admin@urunan.test']))
         ->get(route('statistik.index'))
         ->assertOk()
-        ->assertSee('Statistik Urunan');
+        ->assertSee('Statistik Udunan');
 });
 
 test('halaman statistik menghitung yang sedang online dari session aktif', function () {

@@ -193,3 +193,33 @@ window.addEventListener('konfeti', () => {
 
     requestAnimationFrame(gambar);
 });
+
+/*
+| Aplikasi yang bisa dipasang (PWA).
+|
+| Service worker didaftarkan supaya Udunan bisa dipasang ke layar utama dan
+| menampilkan halaman offline. Event `beforeinstallprompt` disimpan supaya
+| tombol "Pasang aplikasi" bisa memunculkan dialog pemasangan bawaan browser.
+*/
+if ('serviceWorker' in navigator && window.isSecureContext) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}
+
+window.urunanPasang = {
+    tunda: null,
+    sudahTerpasang: () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true,
+    iOS: () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+};
+
+window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    window.urunanPasang.tunda = event;
+    window.dispatchEvent(new CustomEvent('urunan-bisa-dipasang'));
+});
+
+window.addEventListener('appinstalled', () => {
+    window.urunanPasang.tunda = null;
+    window.dispatchEvent(new CustomEvent('urunan-terpasang'));
+});

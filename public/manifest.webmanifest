@@ -1,0 +1,24 @@
+{
+    "id": "/",
+    "name": "Udunan - Patungan tanpa drama",
+    "short_name": "Udunan",
+    "description": "Catat patungan, bagi tagihan otomatis, dan tagih teman tanpa canggung.",
+    "lang": "id",
+    "dir": "ltr",
+    "start_url": "/dashboard?sumber=aplikasi",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": ["standalone", "minimal-ui"],
+    "background_color": "#18181b",
+    "theme_color": "#4f46e5",
+    "categories": ["finance", "productivity", "social"],
+    "icons": [
+        { "src": "/ikon/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/ikon/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/ikon/ikon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "Grup patungan", "short_name": "Grup", "url": "/grup?sumber=pintasan", "icons": [{ "src": "/ikon/ikon-96.png", "sizes": "96x96" }] },
+        { "name": "Notifikasi", "url": "/notifikasi?sumber=pintasan", "icons": [{ "src": "/ikon/ikon-96.png", "sizes": "96x96" }] }
+    ]
+}

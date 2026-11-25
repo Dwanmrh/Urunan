@@ -44,7 +44,7 @@ new #[Title('Telegram')] class extends Component {
         }
 
         $berhasil = rescue(
-            fn (): bool => KirimPesanTelegram::kirim($user->telegram_chat_id, __('Pesan uji dari Urunan. Kalau ini sampai, notifikasi Telegram-mu sudah jalan.'))->successful(),
+            fn (): bool => KirimPesanTelegram::kirim($user->telegram_chat_id, __('Pesan uji dari Udunan. Kalau ini sampai, notifikasi Telegram-mu sudah jalan.'))->successful(),
             false,
             report: false,
         );
@@ -80,7 +80,7 @@ new #[Title('Telegram')] class extends Component {
             <div class="space-y-6">
                 <div class="flex items-center gap-3">
                     <flux:badge color="green" icon="check-circle">{{ __('Terhubung') }}</flux:badge>
-                    <flux:text>{{ __('Notifikasi Urunan juga dikirim ke Telegram-mu.') }}</flux:text>
+                    <flux:text>{{ __('Notifikasi Udunan juga dikirim ke Telegram-mu.') }}</flux:text>
                 </div>
 
                 <div class="flex flex-wrap gap-2">
@@ -88,7 +88,7 @@ new #[Title('Telegram')] class extends Component {
                     <flux:button
                         x-on:click="$dispatch('konfirmasi', {
                             judul: {{ \Illuminate\Support\Js::from(__('Putuskan Telegram?')) }},
-                            pesan: {{ \Illuminate\Support\Js::from(__('Kamu berhenti menerima notifikasi Urunan di Telegram. Bisa dihubungkan lagi kapan saja.')) }},
+                            pesan: {{ \Illuminate\Support\Js::from(__('Kamu berhenti menerima notifikasi Udunan di Telegram. Bisa dihubungkan lagi kapan saja.')) }},
                             tombol: {{ \Illuminate\Support\Js::from(__('Putuskan')) }},
                             bahaya: true,
                             aksi: () => $wire.putuskan(),
@@ -101,7 +101,7 @@ new #[Title('Telegram')] class extends Component {
         @else
             <div class="space-y-6" @if (filled(auth()->user()->telegram_token)) wire:poll.5s @endif>
                 <flux:text>
-                    {!! __('Tekan tombol di bawah. Telegram akan terbuka di bot Urunan, lalu tekan <strong>Start</strong> sekali. Setelah itu kembali ke sini, statusnya berubah sendiri.') !!}
+                    {!! __('Tekan tombol di bawah. Telegram akan terbuka di bot Udunan, lalu tekan <strong>Start</strong> sekali. Setelah itu kembali ke sini, statusnya berubah sendiri.') !!}
                 </flux:text>
 
                 <flux:button wire:click="hubungkan" variant="primary" icon="paper-airplane" data-test="hubungkan-telegram">{{ __('Hubungkan Telegram') }}</flux:button>

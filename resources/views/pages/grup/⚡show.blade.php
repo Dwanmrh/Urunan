@@ -205,7 +205,7 @@ new #[Title('Detail grup')] class extends Component {
     #[Computed]
     public function pesanUndangan(): string
     {
-        return __('Yuk gabung grup patungan *:grup* :emoji di Urunan, biar urusan bayar-bayaran jelas dan nggak ada yang kelupaan:', ['grup' => $this->grup->nama, 'emoji' => $this->grup->emoji])
+        return __('Yuk gabung grup patungan *:grup* :emoji di Udunan, biar urusan bayar-bayaran jelas dan nggak ada yang kelupaan:', ['grup' => $this->grup->nama, 'emoji' => $this->grup->emoji])
             ."\n".route('grup.gabung', $this->grup->kode_undangan);
     }
 
@@ -452,8 +452,8 @@ new #[Title('Detail grup')] class extends Component {
     <x-tur nama="grup-detail" :langkah="[
         ['elemen' => '[data-tur=link-undangan]', 'judul' => __('Ajak teman'), 'isi' => __('Kirim link undangan ke grup WhatsApp. Teman yang membukanya bisa daftar dan langsung bergabung.')],
         ['elemen' => '[data-tur=tambah-anggota]', 'judul' => __('Anggota tanpa akun'), 'isi' => __('Teman yang belum mau daftar tetap bisa dicatat. Kalau nanti dia bergabung lewat link, tagihannya ikut tersambung.')],
-        ['elemen' => '[data-tur=tambah-tagihan]', 'judul' => __('Catat tagihan'), 'isi' => __('Siapa yang membayar dulu mencatat tagihannya di sini, lalu Urunan membagi ke tiap anggota.'), 'sisi' => 'bottom'],
-        ['elemen' => '[data-tur=rencana-pelunasan]', 'judul' => __('Siapa bayar ke siapa'), 'isi' => __('Urunan meringkas utang semua anggota jadi transfer sesedikit mungkin.')],
+        ['elemen' => '[data-tur=tambah-tagihan]', 'judul' => __('Catat tagihan'), 'isi' => __('Siapa yang membayar dulu mencatat tagihannya di sini, lalu Udunan membagi ke tiap anggota.'), 'sisi' => 'bottom'],
+        ['elemen' => '[data-tur=rencana-pelunasan]', 'judul' => __('Siapa bayar ke siapa'), 'isi' => __('Udunan meringkas utang semua anggota jadi transfer sesedikit mungkin.')],
         ['elemen' => '[data-tur=kelola-grup]', 'judul' => __('Atur grup'), 'isi' => __('Ganti nama, emoji, dan warna grup, atau keluar dari grup lewat menu ini.'), 'sisi' => 'left'],
     ]" />
 

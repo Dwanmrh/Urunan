@@ -29,7 +29,7 @@
         },
     }"
     x-on:toast-show.window="tambah($event.detail)"
-    class="pointer-events-none fixed inset-x-4 top-4 z-70 flex flex-col items-center gap-2 sm:inset-x-auto sm:inset-e-4 sm:top-auto sm:bottom-4 sm:items-end"
+    class="pointer-events-none fixed inset-x-4 top-[calc(env(safe-area-inset-top)+1rem)] z-70 flex flex-col items-center gap-2 lg:inset-x-auto lg:inset-e-4 lg:top-auto lg:bottom-4 lg:items-end"
     aria-live="polite"
 >
     <template x-for="toast in daftar" :key="toast.id">

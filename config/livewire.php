@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Garis progres di atas layar saat pindah halaman dengan wire:navigate,
-    | memakai warna indigo Urunan. Pengaturan Livewire lain tetap bawaan.
+    | memakai warna indigo Udunan. Pengaturan Livewire lain tetap bawaan.
     |
     */
 

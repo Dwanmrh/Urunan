@@ -349,7 +349,7 @@ new #[Title('Tagihan')] class extends Component {
 
     <x-kepala-halaman
         :judul="$tagihan ? __('Edit tagihan') : __('Tambah tagihan')"
-        :sub="$tagihan ? null : __('Yang bayar duluan catat di sini. Urunan yang bagi, kamu tinggal santai.')"
+        :sub="$tagihan ? null : __('Yang bayar duluan catat di sini. Udunan yang bagi, kamu tinggal santai.')"
         :kembali="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)"
         :kembali-label="$tagihan ? $tagihan->judul : $grup->emoji.' '.$grup->nama"
     />

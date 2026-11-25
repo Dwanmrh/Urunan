@@ -22,7 +22,7 @@ test('ganti bahasa tidak mengarahkan ke situs lain', function () {
         ->assertRedirect(route('home'));
 });
 
-test('halaman yang tidak ada menampilkan halaman 404 Urunan', function () {
+test('halaman yang tidak ada menampilkan halaman 404 Udunan', function () {
     $this->get('/halaman-yang-tidak-ada')->assertNotFound()->assertSee('Halaman tidak ditemukan');
 });
 

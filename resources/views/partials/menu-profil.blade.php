@@ -22,12 +22,17 @@
             @endif
         </flux:menu.item>
         <flux:menu.item :href="route('security.edit')" icon="shield-check" wire:navigate>{{ __('Security') }}</flux:menu.item>
+        <x-pasang-aplikasi gaya="menu" />
         @can('lihat-statistik')
             <flux:menu.item :href="route('statistik.index')" icon="chart-bar" wire:navigate>{{ __('Statistik') }}</flux:menu.item>
         @endcan
     </div>
 
     <div class="border-t border-zinc-100 px-3 py-2.5 dark:border-zinc-700">
+        <div class="mb-3 flex items-center justify-between gap-2">
+            <p class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">{{ __('Bahasa') }}</p>
+            <x-pilih-bahasa class="text-xs" />
+        </div>
         <p class="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">{{ __('Tampilan') }}</p>
         <div class="grid grid-cols-3 gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900" role="radiogroup" aria-label="{{ __('Tampilan') }}">
             @foreach (['light' => ['sun', __('Light')], 'dark' => ['moon', __('Dark')], 'system' => ['computer-desktop', __('Otomatis')]] as $mode => [$ikon, $label])

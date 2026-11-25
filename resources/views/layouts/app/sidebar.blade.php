@@ -6,10 +6,10 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         @php($jumlahNotifikasiBaru = auth()->user()->unreadNotifications()->count())
 
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar sticky collapsible class="max-lg:hidden! border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <flux:sidebar.collapse />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
@@ -47,27 +47,23 @@
                 </flux:sidebar.item>
             </flux:sidebar.nav>
 
-            <x-pilih-bahasa class="px-1" data-tur="pilih-bahasa" />
+            <x-pilih-bahasa class="px-1 in-data-flux-sidebar-collapsed-desktop:hidden" data-tur="pilih-bahasa" />
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+        <flux:header class="sticky top-0 z-30 border-b border-zinc-200/80 bg-white/90 pt-[env(safe-area-inset-top)] backdrop-blur-lg lg:hidden dark:border-zinc-700/80 dark:bg-zinc-800/90">
+            <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2" aria-label="Udunan">
+                <img src="/ikon/ikon-96.png" alt="" class="size-8 rounded-lg">
+                <span class="font-bold tracking-tight text-zinc-900 dark:text-white">Udunan</span>
+            </a>
 
             <flux:spacer />
 
-            <button type="button" x-on:click="mulaiTur({{ \Illuminate\Support\Js::from(__('Panduan belum tersedia di halaman ini.')) }})" class="inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ __('Panduan') }}" data-tur="tombol-panduan-hp">
-                <flux:icon.question-mark-circle class="size-5" />
+            <button type="button" x-on:click="mulaiTur({{ \Illuminate\Support\Js::from(__('Panduan belum tersedia di halaman ini.')) }})" class="inline-flex size-10 items-center justify-center rounded-xl text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700" aria-label="{{ __('Panduan') }}" data-tur="tombol-panduan-hp">
+                <flux:icon.question-mark-circle class="size-6" />
             </button>
-
-            <a href="{{ route('notifikasi.index') }}" wire:navigate data-tur="menu-notifikasi-hp" class="relative me-2 inline-flex size-10 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700" aria-label="{{ $jumlahNotifikasiBaru ? __('Notifikasi, :jumlah belum dibaca', ['jumlah' => $jumlahNotifikasiBaru]) : __('Notifikasi') }}">
-                <flux:icon.bell class="size-5" />
-                @if ($jumlahNotifikasiBaru)
-                    <span class="absolute end-1 top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-sky-600 px-1 text-xs font-semibold text-white">{{ $jumlahNotifikasiBaru > 9 ? '9+' : $jumlahNotifikasiBaru }}</span>
-                @endif
-            </a>
 
             <flux:dropdown position="bottom" align="end">
                 <button type="button" class="rounded-full p-0.5 transition hover:ring-2 hover:ring-indigo-500/40" aria-label="{{ __('Menu akun') }}" data-test="menu-akun-hp">
@@ -79,6 +75,8 @@
         </flux:header>
 
         {{ $slot }}
+
+        @include('partials.navigasi-bawah')
 
         @persist('toast')
             <x-toast-urunan />

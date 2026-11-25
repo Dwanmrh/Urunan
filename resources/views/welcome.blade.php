@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark scroll-smooth">
     <head>
         @include('partials.head', ['title' => 'Patungan tanpa ribet'])
-        <meta name="description" content="{{ __('Catat tagihan makan, liburan, atau kos. Urunan menghitung bagian tiap orang, mencatat siapa yang sudah bayar, dan mengingatkan yang belum.') }}">
+        <meta name="description" content="{{ __('Catat tagihan makan, liburan, atau kos. Udunan menghitung bagian tiap orang, mencatat siapa yang sudah bayar, dan mengingatkan yang belum.') }}">
     </head>
     <body class="min-h-screen bg-white text-zinc-700 antialiased dark:bg-zinc-950 dark:text-zinc-300">
         {{-- Cahaya latar --}}
@@ -30,7 +30,7 @@
                 <div class="flex items-center gap-2">
                     <x-pilih-bahasa class="me-1 hidden sm:flex" />
                     @auth
-                        <flux:button :href="route('dashboard')" variant="primary" size="sm">{{ __('Buka Urunan') }}</flux:button>
+                        <flux:button :href="route('dashboard')" variant="primary" size="sm">{{ __('Buka Udunan') }}</flux:button>
                     @else
                         <flux:button :href="route('login')" variant="ghost" size="sm">{{ __('Log in') }}</flux:button>
                         @if (Route::has('register'))
@@ -56,12 +56,12 @@
                     </h1>
 
                     <p class="mt-5 max-w-xl text-lg text-pretty">
-                        {{ __('Catat tagihan makan, liburan, atau kos. Urunan menghitung bagian tiap orang, mencatat siapa yang sudah bayar, dan mengingatkan yang belum.') }}
+                        {{ __('Catat tagihan makan, liburan, atau kos. Udunan menghitung bagian tiap orang, mencatat siapa yang sudah bayar, dan mengingatkan yang belum.') }}
                     </p>
 
                     <div class="mt-8 flex flex-wrap gap-3">
                         @auth
-                            <flux:button :href="route('dashboard')" variant="primary" icon:trailing="arrow-right">{{ __('Buka Urunan') }}</flux:button>
+                            <flux:button :href="route('dashboard')" variant="primary" icon:trailing="arrow-right">{{ __('Buka Udunan') }}</flux:button>
                         @else
                             <flux:button :href="route('register')" variant="primary" icon:trailing="arrow-right">{{ __('Mulai gratis') }}</flux:button>
                             <flux:button href="#cara-kerja" variant="ghost">{{ __('Lihat cara kerjanya') }}</flux:button>
@@ -194,7 +194,7 @@
                         ['ikon' => 'calculator', 'judul' => __('Bagi rata atau per item'), 'isi' => __('Yang pesan daging bayar daging, yang ikut semua bayar bagian bersama.')],
                         ['ikon' => 'photo', 'judul' => __('Bukti bayar tercatat'), 'isi' => __('Kirim foto bukti transfer, yang menalangi tinggal konfirmasi.')],
                         ['ikon' => 'link', 'judul' => __('Satu link untuk grup'), 'isi' => __('Bagikan link undangan ke grup WhatsApp, teman tinggal bergabung.')],
-                        ['ikon' => 'arrows-right-left', 'judul' => __('Siapa bayar ke siapa'), 'isi' => __('Urunan meringkas utang semua anggota jadi transfer sesedikit mungkin.')],
+                        ['ikon' => 'arrows-right-left', 'judul' => __('Siapa bayar ke siapa'), 'isi' => __('Udunan meringkas utang semua anggota jadi transfer sesedikit mungkin.')],
                         ['ikon' => 'bell-alert', 'judul' => __('Notifikasi'), 'isi' => __('Kabar tagihan baru, bukti bayar masuk, dan konfirmasi pembayaran muncul di aplikasi dan Telegram.')],
                         ['ikon' => 'language', 'judul' => __('Dua bahasa'), 'isi' => __('Ganti tampilan ke Bahasa Indonesia atau English kapan saja.')],
                     ] as $urutan => $fitur)
@@ -221,8 +221,8 @@
 
                 <div x-data="{ buka: 0 }" class="mt-10 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 dark:divide-white/10 dark:border-white/10">
                     @foreach ([
-                        [__('Apakah Urunan gratis?'), __('Ya, gratis dan tanpa iklan.')],
-                        [__('Apakah uangnya lewat Urunan?'), __('Tidak. Urunan hanya mencatat dan menghitung. Transfer tetap langsung ke rekening atau dompet digital teman yang menalangi.')],
+                        [__('Apakah Udunan gratis?'), __('Ya, gratis dan tanpa iklan.')],
+                        [__('Apakah uangnya lewat Udunan?'), __('Tidak. Udunan hanya mencatat dan menghitung. Transfer tetap langsung ke rekening atau dompet digital teman yang menalangi.')],
                         [__('Apakah semua teman harus daftar?'), __('Tidak. Teman tanpa akun tetap bisa dicatat di grup. Kalau nanti mereka bergabung lewat link undangan, tagihannya ikut tersambung.')],
                         [__('Siapa yang bisa melihat bukti bayar?'), __('Hanya anggota grup itu. Foto bukti disimpan privat dan tidak bisa dibuka lewat link publik.')],
                     ] as $urutan => [$tanya, $jawab])
@@ -248,11 +248,11 @@
             <section class="mx-auto max-w-6xl px-5 pb-20 sm:px-8">
                 <div class="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 via-indigo-600 to-violet-600 px-6 py-14 text-center sm:px-12">
                     <div aria-hidden="true" class="absolute -top-24 -right-24 size-72 rounded-full bg-white/10 blur-2xl"></div>
-                    <h2 class="relative text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ __('Patungan berikutnya, biar Urunan yang hitung.') }}</h2>
+                    <h2 class="relative text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ __('Patungan berikutnya, biar Udunan yang hitung.') }}</h2>
                     <p class="relative mx-auto mt-3 max-w-xl text-white/90">{{ __('Buat grup pertamamu dalam satu menit.') }}</p>
                     <div class="relative mt-8 flex justify-center">
                         <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-indigo-700 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
-                            {{ auth()->check() ? __('Buka Urunan') : __('Mulai gratis') }}
+                            {{ auth()->check() ? __('Buka Udunan') : __('Mulai gratis') }}
                             <flux:icon.arrow-right variant="mini" class="size-4" />
                         </a>
                     </div>

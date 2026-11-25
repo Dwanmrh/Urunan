@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex">
-        <title>@yield('kode') · {{ config('app.name', 'Urunan') }}</title>
+        <title>@yield('kode') · {{ config('app.name', 'Udunan') }}</title>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         {{-- Gaya ditulis langsung supaya halaman error tetap tampil walau aset Vite bermasalah. --}}
         <style>

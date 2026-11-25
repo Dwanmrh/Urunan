@@ -29,7 +29,7 @@ class TanganiUpdateTelegram
         }
 
         if (! str_starts_with($teks, '/start')) {
-            KirimPesanTelegram::kirim($chatId, __('Bot ini hanya mengirim kabar dari Urunan. Buka Urunan untuk melihat dan membayar tagihanmu.'));
+            KirimPesanTelegram::kirim($chatId, __('Bot ini hanya mengirim kabar dari Udunan. Buka Udunan untuk melihat dan membayar tagihanmu.'));
 
             return;
         }
@@ -38,7 +38,7 @@ class TanganiUpdateTelegram
         $user = $token !== '' ? User::where('telegram_token', $token)->first() : null;
 
         if ($user === null) {
-            KirimPesanTelegram::kirim($chatId, __('Kode penghubung tidak dikenal atau sudah dipakai. Buka Urunan, masuk ke Pengaturan > Telegram, lalu tekan Hubungkan Telegram lagi.'));
+            KirimPesanTelegram::kirim($chatId, __('Kode penghubung tidak dikenal atau sudah dipakai. Buka Udunan, masuk ke Pengaturan > Telegram, lalu tekan Hubungkan Telegram lagi.'));
 
             return;
         }
@@ -50,6 +50,6 @@ class TanganiUpdateTelegram
             'telegram_token' => null,
         ])->save();
 
-        KirimPesanTelegram::kirim($chatId, __('Halo :nama, Telegram-mu sudah terhubung dengan Urunan. Kabar tagihan dan bukti bayar akan dikirim ke sini.', ['nama' => $user->name], $user->preferredLocale()));
+        KirimPesanTelegram::kirim($chatId, __('Halo :nama, Telegram-mu sudah terhubung dengan Udunan. Kabar tagihan dan bukti bayar akan dikirim ke sini.', ['nama' => $user->name], $user->preferredLocale()));
     }
 }
