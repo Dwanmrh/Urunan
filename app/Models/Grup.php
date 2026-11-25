@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusPembayaran;
+use App\Enums\WarnaGrup;
 use Database\Factories\GrupFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -18,17 +19,29 @@ use Illuminate\Support\Str;
 /**
  * @property int $id
  * @property string $nama
+ * @property string $emoji
+ * @property WarnaGrup $warna
  * @property string $kode_undangan
  * @property int $dibuat_oleh
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
 #[Table('grup')]
-#[Fillable(['nama', 'kode_undangan', 'dibuat_oleh'])]
+#[Fillable(['nama', 'emoji', 'warna', 'kode_undangan', 'dibuat_oleh'])]
 class Grup extends Model
 {
     /** @use HasFactory<GrupFactory> */
     use HasFactory;
+
+    /**
+     * Nilai bawaan sebelum disimpan, sama dengan bawaan kolom di database.
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'emoji' => '🎉',
+        'warna' => 'indigo',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -39,6 +52,7 @@ class Grup extends Model
     {
         return [
             'dibuat_oleh' => 'integer',
+            'warna' => WarnaGrup::class,
         ];
     }
 
@@ -55,11 +69,13 @@ class Grup extends Model
     /**
      * Buat grup baru dan langsung masukkan pembuatnya sebagai anggota.
      */
-    public static function buatUntuk(User $user, string $nama): self
+    public static function buatUntuk(User $user, string $nama, ?string $emoji = null, ?WarnaGrup $warna = null): self
     {
-        return DB::transaction(function () use ($user, $nama): self {
+        return DB::transaction(function () use ($user, $nama, $emoji, $warna): self {
             $grup = self::create([
                 'nama' => $nama,
+                'emoji' => $emoji ?? '🎉',
+                'warna' => $warna ?? WarnaGrup::Indigo,
                 'dibuat_oleh' => $user->id,
             ]);
 
@@ -86,6 +102,29 @@ class Grup extends Model
     public function bisaDikelolaOleh(User $user): bool
     {
         return $this->dibuat_oleh === $user->id;
+    }
+
+    /**
+     * Keluarkan user dari grup.
+     *
+     * Kalau namanya sudah tercatat di tagihan atau pembayaran, data itu tetap ada
+     * dan dia menjadi anggota tanpa akun supaya saldo grup tetap benar.
+     */
+    public function keluarkan(User $user): void
+    {
+        $anggota = $this->anggota()->where('user_id', $user->id)->first();
+
+        if ($anggota === null) {
+            return;
+        }
+
+        if ($anggota->sudahTercatat()) {
+            $anggota->update(['user_id' => null]);
+
+            return;
+        }
+
+        $anggota->delete();
     }
 
     /**

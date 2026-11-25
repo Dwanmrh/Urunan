@@ -23,6 +23,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $email
  * @property string|null $google_id
  * @property string|null $locale
+ * @property list<array{jenis: string, nomor: string, atas_nama: string}>|null $info_bayar
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $telegram_chat_id
@@ -51,6 +52,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'info_bayar' => 'array',
         ];
     }
 
@@ -90,5 +92,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    /**
+     * Rekening atau e-wallet tujuan transfer yang diisi user.
+     *
+     * @return list<array{jenis: string, nomor: string, atas_nama: string}>
+     */
+    public function infoBayar(): array
+    {
+        return array_values(array_filter(
+            (array) ($this->info_bayar ?? []),
+            fn ($baris): bool => is_array($baris) && filled($baris['jenis'] ?? null) && filled($baris['nomor'] ?? null),
+        ));
     }
 }

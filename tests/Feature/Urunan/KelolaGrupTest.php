@@ -32,7 +32,7 @@ test('pembuat grup bisa mengganti nama grup', function () {
     $this->actingAs($userDwan);
 
     Livewire::test('pages::grup.show', ['grup' => $grup])
-        ->set('namaGrup', 'Liburan Pangandaran')
+        ->set('nama', 'Liburan Pangandaran')
         ->call('ubahNamaGrup')
         ->assertHasNoErrors();
 
@@ -45,7 +45,7 @@ test('anggota biasa tidak bisa mengganti nama, menghapus grup, atau mengatur ang
     $this->actingAs($userDeren);
 
     Livewire::test('pages::grup.show', ['grup' => $grup])
-        ->set('namaGrup', 'Diganti')
+        ->set('nama', 'Diganti')
         ->call('ubahNamaGrup')
         ->assertForbidden();
 

@@ -125,9 +125,9 @@ new class extends Component {
 
         <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <p class="text-sm font-medium text-indigo-100">{{ now()->locale(app()->getLocale())->translatedFormat('l, j F Y') }}</p>
+                <p class="text-sm font-medium text-white/90">{{ now()->locale(app()->getLocale())->translatedFormat('l, j F Y') }}</p>
                 <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{{ __('Halo, :nama', ['nama' => auth()->user()->name]) }}</h1>
-                <p class="mt-1 text-indigo-100">{{ __('Ini ringkasan patunganmu hari ini.') }}</p>
+                <p class="mt-1 text-white/90">{{ __('Ini ringkasan patunganmu hari ini.') }}</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -175,7 +175,7 @@ new class extends Component {
 
             <div class="mt-8 flex flex-col items-center gap-3">
                 <flux:button :href="route('grup.index')" variant="primary" icon="plus" wire:navigate>{{ __('Buat grup pertama') }}</flux:button>
-                <p class="text-xs text-zinc-500">{{ __('Kalau temanmu sudah mengirim link undangan, cukup buka link itu untuk bergabung.') }}</p>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ __('Kalau temanmu sudah mengirim link undangan, cukup buka link itu untuk bergabung.') }}</p>
             </div>
         </section>
     @else
@@ -189,7 +189,7 @@ new class extends Component {
             ] as $urutan => $kartu)
                 <div class="rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-md motion-safe:animate-[muncul_0.5s_ease-out_both] dark:border-zinc-700 dark:bg-zinc-900" style="animation-delay: {{ 80 + $urutan * 80 }}ms">
                     <div class="flex items-center justify-between">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $kartu['label'] }}</p>
+                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $kartu['label'] }}</p>
                         <span class="flex size-8 items-center justify-center rounded-lg {{ $kartu['warna'] }}">
                             <flux:icon :icon="$kartu['ikon']" variant="mini" class="size-4" />
                         </span>
@@ -220,7 +220,7 @@ new class extends Component {
                                         <x-inisial :nama="$pembayaran->dari->nama" />
                                         <div class="min-w-0 flex-1">
                                             <p class="truncate font-medium text-zinc-900 dark:text-white">{{ __(':nama mengirim bukti', ['nama' => $pembayaran->dari->nama]) }}</p>
-                                            <p class="truncate text-sm text-zinc-500">{{ $pembayaran->tagihan->judul }} · {{ $pembayaran->tagihan->grup->nama }}</p>
+                                            <p class="truncate text-sm text-zinc-600 dark:text-zinc-400">{{ $pembayaran->tagihan->judul }} · {{ $pembayaran->tagihan->grup->nama }}</p>
                                         </div>
                                         <x-rupiah :jumlah="$pembayaran->jumlah" class="shrink-0 font-semibold text-zinc-900 tabular-nums dark:text-white" />
                                         <span class="hidden shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition group-hover:bg-indigo-500 sm:inline">{{ __('Cek') }}</span>
@@ -246,7 +246,7 @@ new class extends Component {
                                 <flux:icon.check-badge class="size-6" />
                             </span>
                             <p class="mt-3 font-medium text-zinc-900 dark:text-white">{{ __('Semua bagianmu sudah lunas.') }}</p>
-                            <p class="mt-1 text-sm text-zinc-500">{{ __('Tagihan baru akan muncul di sini.') }}</p>
+                            <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Tagihan baru akan muncul di sini.') }}</p>
                         </div>
                     @else
                         <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -256,14 +256,14 @@ new class extends Component {
                                         <x-inisial :nama="$baris['tagihan']->pembayar->nama" />
                                         <div class="min-w-0 flex-1">
                                             <p class="truncate font-medium text-zinc-900 dark:text-white">{{ $baris['tagihan']->judul }}</p>
-                                            <p class="truncate text-sm text-zinc-500">{{ __('Ke :nama, :grup', ['nama' => $baris['tagihan']->pembayar->nama, 'grup' => $baris['tagihan']->grup->nama]) }}</p>
+                                            <p class="truncate text-sm text-zinc-600 dark:text-zinc-400">{{ __('Ke :nama, :grup', ['nama' => $baris['tagihan']->pembayar->nama, 'grup' => $baris['tagihan']->grup->nama]) }}</p>
                                         </div>
                                         <div class="flex shrink-0 flex-col items-end gap-1">
                                             <x-rupiah :jumlah="$baris['sisa']" class="font-semibold text-zinc-900 tabular-nums dark:text-white" />
                                             @if ($baris['menunggu'])
-                                                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">{{ __('Menunggu') }}</span>
+                                                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">{{ __('Menunggu') }}</span>
                                             @else
-                                                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">{{ __('Belum') }}</span>
+                                                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">{{ __('Belum') }}</span>
                                             @endif
                                         </div>
                                         <flux:icon.chevron-right variant="mini" class="size-4 shrink-0 text-zinc-300 transition group-hover:translate-x-0.5 group-hover:text-zinc-500" />
@@ -276,6 +276,18 @@ new class extends Component {
             </div>
 
             <div class="space-y-6">
+                {{-- Ajakan mengisi rekening --}}
+                @if (auth()->user()->infoBayar() === [])
+                    <a href="{{ route('pembayaran.edit') }}" wire:navigate class="group flex items-center gap-3 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-indigo-500/30 dark:bg-indigo-500/10" data-test="ajakan-rekening">
+                        <span class="text-2xl" aria-hidden="true">💳</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-indigo-900 dark:text-white/90">{{ __('Isi rekening kamu') }}</p>
+                            <p class="text-xs text-indigo-800 dark:text-indigo-200">{{ __('Biar teman nggak nanya "transfer ke mana?" lagi.') }}</p>
+                        </div>
+                        <flux:icon.chevron-right variant="micro" class="shrink-0 text-indigo-400 transition group-hover:translate-x-0.5" />
+                    </a>
+                @endif
+
                 {{-- Grup kamu --}}
                 <section class="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="flex items-center justify-between gap-3 border-b border-zinc-100 px-5 py-4 dark:border-zinc-800">
@@ -287,7 +299,7 @@ new class extends Component {
                         @foreach ($this->keanggotaan->take(5) as $baris)
                             <li wire:key="grup-{{ $baris['anggota']->grup_id }}">
                                 <a href="{{ route('grup.show', $baris['anggota']->grup) }}" wire:navigate class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-zinc-50 dark:hover:bg-white/5">
-                                    <x-inisial :nama="$baris['anggota']->grup->nama" kotak />
+                                    <x-emoji-grup :grup="$baris['anggota']->grup" ukuran="sm" />
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $baris['anggota']->grup->nama }}</p>
                                         @if ($baris['saldo'] < 0)
@@ -295,7 +307,7 @@ new class extends Component {
                                         @elseif ($baris['saldo'] > 0)
                                             <p class="text-xs text-emerald-600 dark:text-emerald-400">{{ __('Ditunggu :jumlah', ['jumlah' => \App\Actions\Urunan\FormatRupiah::rp($baris['saldo'])]) }}</p>
                                         @else
-                                            <p class="text-xs text-zinc-500">{{ __('Semua lunas') }}</p>
+                                            <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ __('Semua lunas') }}</p>
                                         @endif
                                     </div>
                                 </a>
@@ -312,7 +324,7 @@ new class extends Component {
                     </div>
 
                     @if ($this->aktivitas->isEmpty())
-                        <p class="px-5 py-6 text-sm text-zinc-500">{{ __('Belum ada aktivitas.') }}</p>
+                        <p class="px-5 py-6 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Belum ada aktivitas.') }}</p>
                     @else
                         <ol class="relative space-y-4 px-5 py-4">
                             @foreach ($this->aktivitas as $notifikasi)
@@ -325,8 +337,8 @@ new class extends Component {
                                     ])></span>
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium text-zinc-900 dark:text-white">{{ $teks['judul'] }}</p>
-                                        <p class="line-clamp-2 text-xs text-zinc-500">{{ $teks['pesan'] }}</p>
-                                        <p class="mt-0.5 text-[11px] text-zinc-400">{{ $notifikasi->created_at->locale(app()->getLocale())->diffForHumans() }}</p>
+                                        <p class="line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">{{ $teks['pesan'] }}</p>
+                                        <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{{ $notifikasi->created_at->locale(app()->getLocale())->diffForHumans() }}</p>
                                     </div>
                                 </li>
                             @endforeach

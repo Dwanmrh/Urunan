@@ -90,10 +90,8 @@ new #[Title('Notifikasi')] class extends Component {
         ['judul' => __('Mau kabar lewat Telegram?'), 'isi' => __('Hubungkan Telegram di Pengaturan supaya notifikasi juga masuk ke HP-mu.')],
     ]" />
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <flux:heading size="xl" level="1">{{ __('Notifikasi') }}</flux:heading>
-
-        <div class="flex flex-wrap gap-2">
+    <x-kepala-halaman :judul="__('Notifikasi')" :sub="__('Kabar tagihan, bukti bayar, dan pengingat.')">
+        <x-slot:aksi>
             @if ($this->daftar->contains(fn ($notifikasi) => $notifikasi->read_at === null))
                 <flux:button wire:click="tandaiSemuaDibaca" size="sm" icon="check" data-test="tandai-semua-dibaca">{{ __('Tandai semua dibaca') }}</flux:button>
             @endif
@@ -113,55 +111,77 @@ new #[Title('Notifikasi')] class extends Component {
                     })"
                 >{{ __('Hapus yang sudah dibaca') }}</flux:button>
             @endif
-        </div>
-    </div>
+        </x-slot:aksi>
+    </x-kepala-halaman>
 
     @if ($this->daftar->isEmpty())
-        <flux:card>
-            <flux:text>{{ __('Belum ada notifikasi. Kabar soal tagihan dan bukti bayar akan muncul di sini.') }}</flux:text>
-        </flux:card>
+        <div class="rounded-3xl border border-dashed border-zinc-300 px-6 py-14 text-center dark:border-zinc-700">
+            <span class="text-5xl" aria-hidden="true">🔔</span>
+            <p class="mt-4 font-semibold text-zinc-900 dark:text-white">{{ __('Masih sepi di sini') }}</p>
+            <p class="mx-auto mt-1 max-w-sm text-sm text-zinc-600 dark:text-zinc-400">{{ __('Belum ada notifikasi. Kabar soal tagihan dan bukti bayar akan muncul di sini.') }}</p>
+        </div>
     @else
-        <flux:card class="p-0">
-            <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                @foreach ($this->daftar as $notifikasi)
-                    @php($teks = \App\Notifications\NotifikasiUrunan::teksUntuk($notifikasi))
-                    <li wire:key="notifikasi-{{ $notifikasi->id }}" class="group flex items-stretch">
-                        <button
-                            type="button"
-                            wire:click="buka('{{ $notifikasi->id }}')"
-                            class="flex min-w-0 flex-1 items-start gap-3 py-3 ps-4 pe-2 text-start hover:bg-zinc-50 dark:hover:bg-zinc-700"
-                        >
-                            <span @class([
-                                'mt-2 size-2 shrink-0 rounded-full',
-                                'bg-sky-500' => $notifikasi->read_at === null,
-                                'bg-transparent' => $notifikasi->read_at !== null,
-                            ])></span>
+        @php
+            $ikon = [
+                \App\Notifications\TagihanBaru::class => ['receipt-percent', 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300'],
+                \App\Notifications\BuktiBayarMasuk::class => ['photo', 'bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300'],
+                \App\Notifications\PembayaranDikonfirmasi::class => ['check-badge', 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'],
+                \App\Notifications\BuktiBayarDitolak::class => ['x-circle', 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300'],
+                \App\Notifications\PengingatBayar::class => ['bell-alert', 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300'],
+            ];
+            $kelompok = $this->daftar->groupBy(fn ($notifikasi) => $notifikasi->created_at->isToday()
+                ? __('Hari ini')
+                : ($notifikasi->created_at->isYesterday() ? __('Kemarin') : __('Sebelumnya')));
+        @endphp
 
-                            <span class="flex-1">
-                                <flux:heading @class(['font-semibold' => $notifikasi->read_at === null])>{{ $teks['judul'] }}</flux:heading>
-                                <flux:text>{{ $teks['pesan'] }}</flux:text>
-                                <flux:text size="sm" class="mt-1">{{ $notifikasi->created_at->locale(app()->getLocale())->diffForHumans() }}</flux:text>
-                            </span>
+        <div class="space-y-6">
+            @foreach ($kelompok as $label => $isi)
+                <div wire:key="kelompok-{{ $loop->index }}">
+                    <h2 class="mb-2 px-1 text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-400 uppercase">{{ $label }}</h2>
+                    <ul class="overflow-hidden rounded-2xl border border-zinc-200 bg-white divide-y divide-zinc-100 dark:border-zinc-700/70 dark:bg-zinc-900 dark:divide-zinc-800">
+                        @foreach ($isi as $notifikasi)
+                            @php($teks = \App\Notifications\NotifikasiUrunan::teksUntuk($notifikasi))
+                            @php([$namaIkon, $warnaIkon] = $ikon[$notifikasi->type] ?? ['bell', 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'])
+                            <li wire:key="notifikasi-{{ $notifikasi->id }}" @class(['group flex items-stretch transition', 'bg-indigo-50/40 dark:bg-indigo-500/5' => $notifikasi->read_at === null])>
+                                <button
+                                    type="button"
+                                    wire:click="buka('{{ $notifikasi->id }}')"
+                                    class="flex min-w-0 flex-1 items-start gap-3 py-3.5 ps-4 pe-2 text-start hover:bg-zinc-50 dark:hover:bg-white/5"
+                                >
+                                    <span class="relative flex size-10 shrink-0 items-center justify-center rounded-xl {{ $warnaIkon }}">
+                                        <flux:icon :icon="$namaIkon" variant="mini" class="size-5" />
+                                        @if ($notifikasi->read_at === null)
+                                            <span class="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-zinc-900"></span>
+                                        @endif
+                                    </span>
 
-                            @if ($notifikasi->read_at === null)
-                                <span class="sr-only">{{ __('Belum dibaca') }}</span>
-                            @endif
-                        </button>
+                                    <span class="min-w-0 flex-1">
+                                        <span @class(['block text-zinc-900 dark:text-white', 'font-semibold' => $notifikasi->read_at === null, 'font-medium' => $notifikasi->read_at !== null])>{{ $teks['judul'] }}</span>
+                                        <span class="mt-0.5 block text-sm text-zinc-600 dark:text-zinc-400">{{ $teks['pesan'] }}</span>
+                                        <span class="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{{ $notifikasi->created_at->locale(app()->getLocale())->diffForHumans() }}</span>
+                                    </span>
 
-                        <button
-                            type="button"
-                            wire:click="hapus('{{ $notifikasi->id }}')"
-                            wire:loading.attr="disabled"
-                            class="flex shrink-0 items-center px-3 text-zinc-400 hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 dark:hover:bg-red-950/40"
-                            aria-label="{{ __('Hapus notifikasi') }}"
-                            title="{{ __('Hapus notifikasi') }}"
-                            data-test="hapus-notifikasi"
-                        >
-                            <flux:icon.trash variant="micro" />
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
-        </flux:card>
+                                    @if ($notifikasi->read_at === null)
+                                        <span class="sr-only">{{ __('Belum dibaca') }}</span>
+                                    @endif
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="hapus('{{ $notifikasi->id }}')"
+                                    wire:loading.attr="disabled"
+                                    class="flex shrink-0 items-center px-3 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 dark:hover:bg-red-950/40"
+                                    aria-label="{{ __('Hapus notifikasi') }}"
+                                    title="{{ __('Hapus notifikasi') }}"
+                                    data-test="hapus-notifikasi"
+                                >
+                                    <flux:icon.trash variant="micro" />
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
     @endif
 </section>

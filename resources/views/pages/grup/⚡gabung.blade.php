@@ -74,24 +74,32 @@ new #[Title('Gabung grup')] class extends Component {
     }
 }; ?>
 
-<section class="w-full max-w-lg">
-    <flux:heading size="xl" level="1">{{ __('Gabung ke :grup', ['grup' => $grup->nama]) }}</flux:heading>
-    <flux:subheading size="lg" class="mb-6">{{ __('Diundang oleh :nama', ['nama' => $grup->pembuat->name]) }}</flux:subheading>
+<section class="mx-auto w-full max-w-lg">
+    <div class="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-xl shadow-zinc-900/5 motion-safe:animate-[muncul_0.5s_ease-out_both] dark:border-zinc-700/70 dark:bg-zinc-900">
+        <div class="relative flex flex-col items-center bg-linear-to-br {{ $grup->warna->gradasi() }} {{ $grup->warna->teks() }} px-6 pt-8 pb-16 text-center">
+            <div aria-hidden="true" class="absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl"></div>
+            <p class="relative text-sm font-medium {{ $grup->warna->teksRedup() }}">{{ __('Kamu diundang ke') }}</p>
+            <h1 class="relative mt-1 text-2xl font-bold tracking-tight break-words">{{ $grup->nama }}</h1>
+            <p class="relative mt-1 text-sm font-medium {{ $grup->warna->teksRedup() }}">{{ __('Diundang oleh :nama', ['nama' => $grup->pembuat->name]) }}</p>
+        </div>
 
-    <form wire:submit="gabung" class="space-y-6">
-        <flux:radio.group wire:model="pilihan" label="{{ __('Kamu yang mana?') }}" variant="cards" class="flex-col">
-            <flux:radio value="baru" label="{{ __('Saya anggota baru') }}" description="{{ __('Masuk sebagai :nama', ['nama' => auth()->user()->name]) }}" />
+        <span class="relative mx-auto -mt-9 flex size-[4.5rem] items-center justify-center rounded-3xl bg-white text-4xl shadow-lg ring-4 ring-white transition hover:scale-110 hover:-rotate-6 dark:bg-zinc-800 dark:ring-zinc-900" aria-hidden="true">{{ $grup->emoji }}</span>
 
-            @foreach ($this->anggotaTanpaAkun as $anggota)
-                <flux:radio
-                    value="{{ $anggota->id }}"
-                    label="{{ __('Saya :nama', ['nama' => $anggota->nama]) }}"
-                    description="{{ __('Sudah dimasukkan ke grup, tagihannya ikut tersambung ke akunmu') }}"
-                    wire:key="anggota-{{ $anggota->id }}"
-                />
-            @endforeach
-        </flux:radio.group>
+        <form wire:submit="gabung" class="space-y-6 p-6">
+            <flux:radio.group wire:model="pilihan" label="{{ __('Kamu yang mana?') }}" variant="cards" class="flex-col">
+                <flux:radio value="baru" label="{{ __('Saya anggota baru') }}" description="{{ __('Masuk sebagai :nama', ['nama' => auth()->user()->name]) }}" />
 
-        <flux:button variant="primary" type="submit" class="w-full" data-test="gabung-grup">{{ __('Gabung') }}</flux:button>
-    </form>
+                @foreach ($this->anggotaTanpaAkun as $anggota)
+                    <flux:radio
+                        value="{{ $anggota->id }}"
+                        label="{{ __('Saya :nama', ['nama' => $anggota->nama]) }}"
+                        description="{{ __('Sudah dimasukkan ke grup, tagihannya ikut tersambung ke akunmu') }}"
+                        wire:key="anggota-{{ $anggota->id }}"
+                    />
+                @endforeach
+            </flux:radio.group>
+
+            <flux:button variant="primary" type="submit" class="w-full" data-test="gabung-grup">{{ __('Gabung sekarang') }} 🚀</flux:button>
+        </form>
+    </div>
 </section>

@@ -395,6 +395,37 @@ class Tagihan extends Model
     }
 
     /**
+     * Pengirim menarik kembali bukti yang masih menunggu konfirmasi, misalnya salah unggah.
+     */
+    public function batalkanBukti(AnggotaGrup $anggota): bool
+    {
+        $pembayaran = $this->pembayaran()
+            ->where('dari_anggota_id', $anggota->id)
+            ->where('status', StatusPembayaran::Menunggu->value)
+            ->first();
+
+        $pembayaran?->hapusDenganBukti();
+
+        return $pembayaran !== null;
+    }
+
+    /**
+     * Batalkan pelunasan yang sudah diterima dari anggota di tagihan ini, misalnya salah tandai lunas.
+     */
+    public function batalkanPelunasan(AnggotaGrup $anggota): int
+    {
+        $daftar = $this->pembayaran()
+            ->where('dari_anggota_id', $anggota->id)
+            ->where('ke_anggota_id', $this->dibayar_oleh)
+            ->where('status', StatusPembayaran::Diterima->value)
+            ->get();
+
+        $daftar->each(fn (Pembayaran $pembayaran) => $pembayaran->hapusDenganBukti());
+
+        return $daftar->count();
+    }
+
+    /**
      * Terima bukti bayar yang menunggu konfirmasi.
      */
     public function konfirmasi(Pembayaran $pembayaran): Pembayaran

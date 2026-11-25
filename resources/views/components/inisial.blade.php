@@ -18,7 +18,8 @@
 
 {{-- Lingkaran (orang) atau kotak membulat (grup) berisi huruf pertama nama, warnanya tetap untuk nama yang sama. --}}
 <span {{ $attributes->class([
-    'flex size-9 shrink-0 items-center justify-center text-sm font-semibold',
+    'flex shrink-0 items-center justify-center font-semibold',
+    'size-9 text-sm' => ! str_contains((string) $attributes->get('class'), 'size-'),
     $kotak ? 'rounded-xl' : 'rounded-full',
     $warna,
 ]) }} aria-hidden="true">{{ $huruf }}</span>

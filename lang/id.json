@@ -113,5 +113,8 @@
     "login using a recovery code": "masuk dengan kode pemulihan",
     "login using an authentication code": "masuk dengan kode autentikasi",
     "or you can": "atau kamu bisa",
-    "or, enter the code manually": "atau, masukkan kodenya manual"
+    "or, enter the code manually": "atau, masukkan kodenya manual",
+    "Pengingat dikirim ke :jumlah orang.": "Pengingat dikirim ke :jumlah orang.",
+    ":jumlah notifikasi dihapus.": ":jumlah notifikasi dihapus.",
+    ":jumlah anggota": ":jumlah anggota"
 }

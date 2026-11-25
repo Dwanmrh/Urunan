@@ -17,13 +17,13 @@
             </flux:button>
         </form>
 
-        <div class="rounded-xl bg-zinc-50 px-4 py-3 text-xs leading-relaxed text-zinc-500 dark:bg-white/5">
+        <div class="rounded-xl bg-zinc-50 px-4 py-3 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400 dark:bg-white/5">
             {{ __('Tidak menemukan emailnya? Tunggu satu sampai dua menit, cek folder Spam atau Promosi, atau masuk dengan Google supaya tidak perlu verifikasi.') }}
         </div>
 
         <form method="POST" action="{{ route('logout') }}" class="text-center">
             @csrf
-            <button type="submit" class="text-sm text-zinc-500 underline-offset-4 hover:text-zinc-800 hover:underline dark:hover:text-white">
+            <button type="submit" class="text-sm text-zinc-600 dark:text-zinc-400 underline-offset-4 hover:text-zinc-800 hover:underline dark:hover:text-white">
                 {{ __('Keluar dan pakai email lain') }}
             </button>
         </form>

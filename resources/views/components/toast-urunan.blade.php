@@ -69,7 +69,7 @@
                 <button
                     type="button"
                     x-on:click="hapus(toast.id)"
-                    class="-m-1 rounded-md p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-white"
+                    class="-m-1 rounded-md p-1 text-zinc-500 dark:text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-white"
                     aria-label="{{ __('Tutup') }}"
                 >
                     <flux:icon.x-mark variant="mini" class="size-4" />

@@ -340,19 +340,19 @@ new #[Title('Tagihan')] class extends Component {
     }
 }; ?>
 
-<section class="w-full max-w-2xl">
+<section class="w-full max-w-3xl">
     <x-tur nama="form-tagihan" :langkah="[
         ['elemen' => '[data-tur=pembayar]', 'judul' => __('Siapa yang membayar dulu?'), 'isi' => __('Pilih orang yang menalangi. Dia yang nanti menerima uang dan mengonfirmasi bukti bayar.')],
         ['elemen' => '[data-tur=cara-bagi]', 'judul' => __('Bagi rata atau per item'), 'isi' => __('Bagi rata untuk tagihan sama besar. Per item kalau tiap orang pesan berbeda, item bersama dibagi ke yang ikut menanggung.')],
         ['elemen' => '[data-tur=perkiraan]', 'judul' => __('Cek sebelum simpan'), 'isi' => __('Bagian tiap orang langsung dihitung saat kamu mengisi form. Setelah disimpan, anggota yang punya akun dapat notifikasi.'), 'sisi' => 'top'],
     ]" />
 
-    <div class="mb-6">
-        <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="subtle" icon="arrow-left" size="sm" wire:navigate class="mb-3">
-            {{ $tagihan ? $tagihan->judul : $grup->nama }}
-        </flux:button>
-        <flux:heading size="xl" level="1">{{ $tagihan ? __('Edit tagihan') : __('Tambah tagihan') }}</flux:heading>
-    </div>
+    <x-kepala-halaman
+        :judul="$tagihan ? __('Edit tagihan') : __('Tambah tagihan')"
+        :sub="$tagihan ? null : __('Yang bayar duluan catat di sini. Urunan yang bagi, kamu tinggal santai.')"
+        :kembali="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)"
+        :kembali-label="$tagihan ? $tagihan->judul : $grup->emoji.' '.$grup->nama"
+    />
 
     @if ($tagihan)
         <flux:callout icon="information-circle" class="mb-6" text="{{ __('Pembayaran yang sudah diterima tetap tercatat. Bukti bayar yang masih menunggu konfirmasi akan dibatalkan dan perlu dikirim ulang.') }}" />
@@ -362,7 +362,10 @@ new #[Title('Tagihan')] class extends Component {
         @endif
     @endif
 
-    <form wire:submit="simpan" class="space-y-6">
+    <form wire:submit="simpan" class="grid gap-6 lg:grid-cols-[1fr_18rem] lg:items-start">
+        <div class="min-w-0 space-y-6">
+        <x-kartu :judul="__('Detail')" ikon="pencil-square">
+        <div class="space-y-6">
         <flux:input wire:model="judul" label="{{ __('Judul') }}" type="text" placeholder="{{ __('Contoh: Makan malam ultah Sinta') }}" required />
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -406,6 +409,11 @@ new #[Title('Tagihan')] class extends Component {
             </flux:select>
         </div>
 
+        </div>
+        </x-kartu>
+
+        <x-kartu :judul="__('Pembagian')" ikon="scale">
+        <div class="space-y-6">
         <flux:radio.group wire:model.live="caraBagi" label="{{ __('Cara membagi') }}" variant="segmented" data-tur="cara-bagi">
             @foreach (\App\Enums\CaraBagi::cases() as $cara)
                 <flux:radio value="{{ $cara->value }}" label="{{ $cara->label() }}" wire:key="cara-{{ $cara->value }}" />
@@ -415,7 +423,7 @@ new #[Title('Tagihan')] class extends Component {
         @if ($caraBagi === 'per_item')
             <div class="space-y-4">
                 @foreach ($item as $urutan => $baris)
-                    <flux:card wire:key="item-{{ $urutan }}" class="space-y-4">
+                    <div wire:key="item-{{ $urutan }}" class="space-y-4 rounded-2xl bg-zinc-50 p-4 dark:bg-white/5">
                         <div class="grid gap-4 sm:grid-cols-[1fr_12rem]">
                             <flux:input wire:model="item.{{ $urutan }}.nama" label="{{ __('Nama item') }}" type="text" placeholder="{{ __('Contoh: Ayam bakar') }}" />
                             <flux:input
@@ -427,7 +435,7 @@ new #[Title('Tagihan')] class extends Component {
                                 placeholder="60.000"
                             >
                                 <x-slot name="iconLeading">
-                                    <span class="text-sm text-zinc-500">Rp</span>
+                                    <span class="text-sm text-zinc-600 dark:text-zinc-400">Rp</span>
                                 </x-slot>
                             </flux:input>
                         </div>
@@ -441,7 +449,7 @@ new #[Title('Tagihan')] class extends Component {
                         @if (count($item) > 1)
                             <flux:button wire:click="hapusItem({{ $urutan }})" variant="subtle" size="sm" icon="trash">{{ __('Hapus item') }}</flux:button>
                         @endif
-                    </flux:card>
+                    </div>
                 @endforeach
 
                 <flux:button wire:click="tambahItem" icon="plus" class="w-full">{{ __('Tambah item') }}</flux:button>
@@ -456,11 +464,11 @@ new #[Title('Tagihan')] class extends Component {
                 placeholder="200.000"
             >
                 <x-slot name="iconLeading">
-                    <span class="text-sm text-zinc-500">Rp</span>
+                    <span class="text-sm text-zinc-600 dark:text-zinc-400">Rp</span>
                 </x-slot>
             </flux:input>
 
-            <flux:checkbox.group wire:model.live="peserta" label="{{ __('Ditanggung oleh') }}">
+            <flux:checkbox.group wire:model.live="peserta" label="{{ __('Ditanggung oleh') }}" variant="pills">
                 @foreach ($this->anggota as $anggota)
                     <flux:checkbox value="{{ $anggota->id }}" label="{{ $anggota->nama }}" wire:key="peserta-{{ $anggota->id }}" />
                 @endforeach
@@ -496,26 +504,38 @@ new #[Title('Tagihan')] class extends Component {
             @endunless
         @endif
 
-        <flux:card class="space-y-3">
-            <flux:heading level="2" data-tur="perkiraan">{{ __('Perkiraan bagian tiap orang') }}</flux:heading>
+        </div>
+        </x-kartu>
+        </div>
 
-            @if ($this->perkiraanBagian === [])
-                <flux:text>{{ __('Isi nominal untuk melihat bagian tiap orang.') }}</flux:text>
-            @else
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @foreach ($this->perkiraanBagian as $urutan => $baris)
-                        <li wire:key="perkiraan-{{ $urutan }}" class="flex items-center justify-between gap-3 py-2 [&>*:first-child]:min-w-0 [&>*:last-child]:shrink-0">
-                            <flux:text>{{ $baris['nama'] }}</flux:text>
-                            <x-rupiah :jumlah="$baris['jumlah']" class="font-semibold" />
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
-        </flux:card>
+        <div class="space-y-4 lg:sticky lg:top-6">
+            <x-kartu :judul="__('Bagian tiap orang')" ikon="calculator" padat data-tur="perkiraan">
+                @if ($this->perkiraanBagian === [])
+                    <div class="flex flex-col items-center px-5 py-8 text-center">
+                        <span class="text-3xl" aria-hidden="true">🧮</span>
+                        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{{ __('Isi nominal untuk melihat bagian tiap orang.') }}</p>
+                    </div>
+                @else
+                    <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                        @foreach ($this->perkiraanBagian as $urutan => $baris)
+                            <li wire:key="perkiraan-{{ $urutan }}" class="flex items-center gap-3 px-5 py-2.5">
+                                <x-inisial :nama="$baris['nama']" class="size-7 text-xs" />
+                                <span class="min-w-0 flex-1 truncate text-sm text-zinc-700 dark:text-zinc-300">{{ $baris['nama'] }}</span>
+                                <x-rupiah :jumlah="$baris['jumlah']" class="shrink-0 text-sm font-semibold text-zinc-900 tabular-nums dark:text-white" />
+                            </li>
+                        @endforeach
+                    </ul>
+                    <div class="flex items-center justify-between border-t border-zinc-100 px-5 py-3 dark:border-zinc-800">
+                        <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">{{ __('Total') }}</span>
+                        <x-rupiah :jumlah="collect($this->perkiraanBagian)->sum('jumlah')" class="font-bold text-zinc-900 tabular-nums dark:text-white" />
+                    </div>
+                @endif
+            </x-kartu>
 
-        <div class="flex justify-end gap-2">
-            <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="filled" wire:navigate>{{ __('Batal') }}</flux:button>
-            <flux:button variant="primary" type="submit" data-test="simpan-tagihan">{{ $tagihan ? __('Simpan perubahan') : __('Simpan tagihan') }}</flux:button>
+            <div class="flex gap-2 max-lg:sticky max-lg:bottom-4 max-lg:z-10 max-lg:rounded-2xl max-lg:bg-white/80 max-lg:p-2 max-lg:shadow-lg max-lg:ring-1 max-lg:ring-zinc-200 max-lg:backdrop-blur dark:max-lg:bg-zinc-900/80 dark:max-lg:ring-zinc-700">
+                <flux:button :href="$tagihan ? route('tagihan.show', [$grup, $tagihan]) : route('grup.show', $grup)" variant="filled" wire:navigate class="flex-1">{{ __('Batal') }}</flux:button>
+                <flux:button variant="primary" type="submit" data-test="simpan-tagihan" class="flex-1">{{ $tagihan ? __('Simpan') : __('Simpan tagihan') }}</flux:button>
+            </div>
         </div>
     </form>
 </section>

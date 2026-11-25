@@ -25,7 +25,7 @@
                 </div>
             </main>
 
-            <footer class="px-5 py-6 text-center text-xs text-zinc-500">
+            <footer class="px-5 py-6 text-center text-xs text-zinc-600 dark:text-zinc-400">
                 &copy; {{ now()->year }} {{ config('app.name') }}. {{ __('Patungan tanpa ribet') }}.
             </footer>
         </div>

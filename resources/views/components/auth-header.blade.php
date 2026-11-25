@@ -12,5 +12,5 @@
     @endif
 
     <h1 class="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">{{ $title }}</h1>
-    <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
+    <p class="mt-1.5 text-sm text-zinc-600 dark:text-zinc-400">{{ $description }}</p>
 </div>

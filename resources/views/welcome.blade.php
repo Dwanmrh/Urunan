@@ -102,9 +102,9 @@
                             <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">{{ __('Langsung') }}</span>
                         </div>
 
-                        <label for="coba-total" class="mt-5 block text-xs font-medium tracking-wide text-zinc-500 uppercase">{{ __('Total tagihan') }}</label>
+                        <label for="coba-total" class="mt-5 block text-xs font-medium tracking-wide text-zinc-600 dark:text-zinc-400 uppercase">{{ __('Total tagihan') }}</label>
                         <div class="mt-2 flex items-center rounded-xl border border-zinc-200 bg-zinc-50 px-4 focus-within:ring-2 focus-within:ring-indigo-500 dark:border-white/10 dark:bg-zinc-950/50">
-                            <span class="text-sm text-zinc-500">Rp</span>
+                            <span class="text-sm text-zinc-600 dark:text-zinc-400">Rp</span>
                             <input
                                 id="coba-total"
                                 type="text"
@@ -116,7 +116,7 @@
                         </div>
 
                         <div class="mt-5 flex items-center justify-between">
-                            <label for="coba-orang" class="text-xs font-medium tracking-wide text-zinc-500 uppercase">{{ __('Jumlah orang') }}</label>
+                            <label for="coba-orang" class="text-xs font-medium tracking-wide text-zinc-600 dark:text-zinc-400 uppercase">{{ __('Jumlah orang') }}</label>
                             <div class="flex items-center gap-2">
                                 <button type="button" x-on:click="orang = Math.max(2, orang - 1)" class="flex size-8 items-center justify-center rounded-lg border border-zinc-200 transition hover:bg-zinc-100 dark:border-white/10 dark:hover:bg-white/5" aria-label="{{ __('Kurangi') }}">−</button>
                                 <span class="w-8 text-center text-lg font-bold text-zinc-950 tabular-nums dark:text-white" x-text="orang"></span>
@@ -126,22 +126,22 @@
                         <input id="coba-orang" type="range" min="2" max="20" x-model.number="orang" class="mt-3 w-full accent-indigo-600">
 
                         <div class="mt-6 rounded-2xl bg-indigo-600 p-5 text-white">
-                            <p class="text-sm text-indigo-100">{{ __('Bagian tiap orang') }}</p>
+                            <p class="text-sm text-white/90">{{ __('Bagian tiap orang') }}</p>
                             <p class="mt-1 text-3xl font-bold tabular-nums" x-text="rupiah(dasar) + (sisa ? '+' : '')"></p>
-                            <p class="mt-1 text-xs text-indigo-100" x-show="sisa" x-cloak x-text="@js(__(':sisa orang pertama bayar Rp 1 lebih supaya pas.')).replace(':sisa', sisa)"></p>
+                            <p class="mt-1 text-xs text-white/90" x-show="sisa" x-cloak x-text="@js(__(':sisa orang pertama bayar Rp 1 lebih supaya pas.')).replace(':sisa', sisa)"></p>
                         </div>
 
                         <ul class="mt-4 space-y-1.5 text-sm">
                             <template x-for="urutan in Math.min(orang, 4)" :key="urutan">
                                 <li class="flex items-center justify-between">
                                     <span class="flex items-center gap-2">
-                                        <span class="flex size-6 items-center justify-center rounded-full bg-zinc-100 text-[11px] font-semibold dark:bg-white/10" x-text="urutan"></span>
+                                        <span class="flex size-6 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold dark:bg-white/10" x-text="urutan"></span>
                                         <span x-text="urutan === 1 ? @js(__('Kamu')) : @js(__('Teman')) + ' ' + (urutan - 1)"></span>
                                     </span>
                                     <span class="font-medium tabular-nums text-zinc-950 dark:text-white" x-text="rupiah(bagian(urutan - 1))"></span>
                                 </li>
                             </template>
-                            <li x-show="orang > 4" x-cloak class="text-xs text-zinc-500" x-text="@js(__('dan :jumlah orang lainnya')).replace(':jumlah', orang - 4)"></li>
+                            <li x-show="orang > 4" x-cloak class="text-xs text-zinc-600 dark:text-zinc-400" x-text="@js(__('dan :jumlah orang lainnya')).replace(':jumlah', orang - 4)"></li>
                         </ul>
                     </div>
                 </div>
@@ -172,7 +172,7 @@
                                     <span class="flex size-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
                                         <flux:icon :icon="$langkah['ikon']" class="size-5" />
                                     </span>
-                                    <span class="text-sm font-semibold text-zinc-400">0{{ $urutan + 1 }}</span>
+                                    <span class="text-sm font-semibold text-zinc-500 dark:text-zinc-400">0{{ $urutan + 1 }}</span>
                                 </div>
                                 <h3 class="mt-5 text-lg font-semibold text-zinc-950 dark:text-white">{{ $langkah['judul'] }}</h3>
                                 <p class="mt-2 text-sm leading-relaxed">{{ $langkah['isi'] }}</p>
@@ -234,7 +234,7 @@
                                 class="flex w-full items-center justify-between gap-4 px-5 py-4 text-start font-medium text-zinc-950 dark:text-white"
                             >
                                 {{ $tanya }}
-                                <flux:icon.chevron-down class="size-5 shrink-0 text-zinc-400 transition" x-bind:class="buka === {{ $urutan }} && 'rotate-180'" />
+                                <flux:icon.chevron-down class="size-5 shrink-0 text-zinc-500 dark:text-zinc-400 transition" x-bind:class="buka === {{ $urutan }} && 'rotate-180'" />
                             </button>
                             <div x-show="buka === {{ $urutan }}" x-collapse x-cloak>
                                 <p class="px-5 pb-5 text-sm leading-relaxed">{{ $jawab }}</p>
@@ -249,7 +249,7 @@
                 <div class="relative overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 via-indigo-600 to-violet-600 px-6 py-14 text-center sm:px-12">
                     <div aria-hidden="true" class="absolute -top-24 -right-24 size-72 rounded-full bg-white/10 blur-2xl"></div>
                     <h2 class="relative text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ __('Patungan berikutnya, biar Urunan yang hitung.') }}</h2>
-                    <p class="relative mx-auto mt-3 max-w-xl text-indigo-100">{{ __('Buat grup pertamamu dalam satu menit.') }}</p>
+                    <p class="relative mx-auto mt-3 max-w-xl text-white/90">{{ __('Buat grup pertamamu dalam satu menit.') }}</p>
                     <div class="relative mt-8 flex justify-center">
                         <a href="{{ auth()->check() ? route('dashboard') : route('register') }}" class="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-indigo-700 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
                             {{ auth()->check() ? __('Buka Urunan') : __('Mulai gratis') }}

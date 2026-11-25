@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Grup;
+use App\Models\Tagihan;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
@@ -60,4 +62,31 @@ test('halaman statistik menghitung yang sedang online dari session aktif', funct
 
     expect(Livewire::test('pages::statistik.index')->instance()->online)
         ->toBe(['pengunjung' => 3, 'pengguna' => 2]);
+});
+
+test('statistik menghitung tingkat pelunasan dan pemakaian fitur', function () {
+    $admin = User::factory()->create(['email' => 'admin@urunan.test', 'info_bayar' => [['jenis' => 'BCA', 'nomor' => '123456', 'atas_nama' => 'Admin']]]);
+    $grup = Grup::buatUntuk($admin, 'Kos');
+    $raka = $grup->anggota()->create(['nama' => 'Raka']);
+    $grup->anggota()->create(['nama' => 'Bima']);
+
+    $this->actingAs($admin);
+    Livewire::test('pages::tagihan.form', ['grup' => $grup])->set('judul', 'Wifi')->set('total', '90.000')->set('ulangi', true)->call('simpan');
+    Tagihan::sole()->tandaiLunas($raka, $admin);
+
+    $halaman = Livewire::test('pages::statistik.index');
+
+    expect($halaman->instance()->tingkatPelunasan)->toBe(50)
+        ->and($halaman->instance()->fitur)->toBe(['rutinAktif' => 1, 'isiRekening' => 1, 'grupAktif' => 1]);
+
+    $halaman->assertSee(__('Pemakaian fitur'))->assertSee('Kos');
+});
+
+test('menu profil tampil dengan pintasan dan tombol keluar', function () {
+    $this->actingAs(User::factory()->create(['name' => 'Dwan']))
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee(__('Info pembayaran'))
+        ->assertSee(__('Belum diisi'))
+        ->assertSee('data-test="logout-button"', false);
 });

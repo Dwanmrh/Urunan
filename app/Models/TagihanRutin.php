@@ -163,6 +163,31 @@ class TagihanRutin extends Model
     }
 
     /**
+     * Ubah isi tagihan rutin. Tagihan yang sudah tercatat tidak ikut berubah.
+     *
+     * Kalau frekuensinya berganti, hitungan jadwal dimulai lagi dari jadwal berikutnya.
+     *
+     * @param  array{judul: string, total: int, frekuensi: Frekuensi, peserta: list<int>}  $data
+     */
+    public function ubah(array $data): void
+    {
+        if ($data['frekuensi'] !== $this->frekuensi) {
+            $this->tanggal_mulai = $this->jadwal_berikutnya;
+            $this->jumlah_dibuat = 0;
+        }
+
+        $peserta = $data['peserta'];
+        sort($peserta);
+
+        $this->fill([
+            'judul' => $data['judul'],
+            'total' => $data['total'],
+            'frekuensi' => $data['frekuensi'],
+            'peserta' => array_values(array_unique($peserta)),
+        ])->save();
+    }
+
+    /**
      * Lanjutkan tagihan yang dijeda. Jadwal yang terlewat selama dijeda tidak ditagih.
      */
     public function lanjutkan(?CarbonInterface $hariIni = null): void

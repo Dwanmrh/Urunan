@@ -2,7 +2,7 @@
 
 @if (\App\Http\Controllers\Auth\GoogleController::aktif())
     <div class="flex flex-col gap-6">
-        <div class="flex items-center gap-3 text-xs uppercase text-zinc-500 dark:text-zinc-400">
+        <div class="flex items-center gap-3 text-xs uppercase text-zinc-600 dark:text-zinc-400">
             <span class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></span>
             {{ __('atau') }}
             <span class="h-px flex-1 bg-zinc-200 dark:bg-zinc-700"></span>
